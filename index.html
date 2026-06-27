@@ -1,4 +1,4 @@
-<TYPE html>
+<!DOCTYPE html>
 <html lang="el">
 <head>
     <meta charset="UTF-8">
@@ -52,6 +52,7 @@
             display: flex;
             gap: 10px;
             justify-content: center;
+            align-items: center;
             flex-wrap: wrap;
             position: static; 
             background-color: var(--card-bg); 
@@ -61,22 +62,6 @@
             box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
         }
 
-        select {
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            background-color: white;
-            cursor: pointer;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .select-active {
-            background-color: #10b981 !important;
-            color: white !important;
-            font-weight: bold;
-        }
         #quizSearch {
             padding: 10px 15px;
             font-size: 16px;
@@ -84,18 +69,82 @@
             border: 1px solid var(--border-color);
             outline: none;
             width: 100%;
-            max-width: 250px;
+            max-width: 220px;
             transition: border-color 0.2s;
         }
         #quizSearch:focus {
             border-color: var(--primary-color);
         }
 
+        /* MULTISELECT DROPDOWN STYLES */
+        .multiselect-container {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 230px;
+            text-align: left;
+        }
+
+        .select-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .select-active {
+            background-color: #10b981 !important;
+            color: white !important;
+            font-weight: bold;
+            border-color: #10b981 !important;
+        }
+
+        #checkboxesArea {
+            display: none;
+            position: absolute;
+            top: 45px;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgb(0 0 0 / 0.1);
+            z-index: 200;
+            max-height: 250px;
+            overflow-y: auto;
+            padding: 5px 0;
+        }
+
+        #checkboxesArea label {
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+            color: var(--text-color);
+        }
+
+        #checkboxesArea label:hover {
+            background-color: #f1f5f9;
+        }
+
+        #checkboxesArea input {
+            margin-right: 10px;
+            transform: scale(1.1);
+        }
+
         .btn {
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 10px 18px;
             font-size: 16px;
             border-radius: 8px;
             cursor: pointer;
@@ -265,24 +314,32 @@
     </header>
 
     <div class="controls">
-                <!-- Πρόσθεσε αυτή τη γραμμή στην αρχή των controls -->
         <input type="text" id="quizSearch" placeholder="🔍 Αναζήτηση ερώτησης..." onkeyup="filterBySearch()">
 
-        <select id="chapterFilter" onchange="changeChapter()">
-            <option value="all">Όλα τα Κεφάλαια</option>
-            <option value="Κεφάλαιο 1">Κεφάλαιο 1</option>
-            <option value="Κεφάλαιο 2">Κεφάλαιο 2</option>
-            <option value="Κεφάλαιο 3">Κεφάλαιο 3</option>
-            <option value="Κεφάλαιο 4">Κεφάλαιο 4</option>
-            <option value="Κεφάλαιο 5">Κεφάλαιο 5</option>
-            <option value="Κεφάλαιο 6">Κεφάλαιο 6</option>
-            <option value="Κεφάλαιο 7">Κεφάλαιο 7</option>
-            <option value="Κεφάλαιο 8">Κεφάλαιο 8</option>
-            <option value="Κεφάλαιο 9">Κεφάλαιο 9</option>
-            <option value="Κεφάλαια 10">Κεφάλαιο 10</option>
-            <option value="Κεφάλαιο 11">Κεφάλαιο 11</option>
-            <option value="Κεφάλαιο 12">Κεφάλαιο 12</option>
-        </select>
+        <!-- ΠΟΛΛΑΠΛΟ ΦΙΛΤΡΟ ΚΕΦΑΛΑΙΩΝ -->
+        <div class="multiselect-container">
+            <div class="select-box" onclick="toggleCheckboxArea()" id="multiSelectDropdown">
+                <span>🔍 Επιλογή Κεφαλαίων</span>
+                <span class="arrow">▼</span>
+            </div>
+            <div id="checkboxesArea">
+                <label><input type="checkbox" value="all" id="selectAllChapters" onchange="checkAllChapters(this)"> ✨ Όλα τα Κεφάλαια</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαιο 1" onchange="updateMultiFilter()"> Κεφάλαιο 1</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαιο 2" onchange="updateMultiFilter()"> Κεφάλαιο 2</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαιο 3" onchange="updateMultiFilter()"> Κεφάλαιο 3</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαιο 4" onchange="updateMultiFilter()"> Κεφάλαιο 4</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαιο 5" onchange="updateMultiFilter()"> Κεφάλαιο 5</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαιο 6" onchange="updateMultiFilter()"> Κεφάλαιο 6</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαιο 7" onchange="updateMultiFilter()"> Κεφάλαιο 7</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαιο 8" onchange="updateMultiFilter()"> Κεφάλαιο 8</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαιο 9" onchange="updateMultiFilter()"> Κεφάλαιο 9</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαια 10" onchange="updateMultiFilter()"> Κεφάλαιο 10</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαιο 11" onchange="updateMultiFilter()"> Κεφάλαιο 11</label>
+                <label><input type="checkbox" class="chapter-check" value="Κεφάλαιο 12" onchange="updateMultiFilter()"> Κεφάλαιο 12</label>
+            </div>
+        </div>
+
+        <button class="btn" style="background-color: #ef4444;" onclick="clearFilters()">❌ Clear</button>
         <button id="examBtn" class="btn btn-exam" onclick="startExamMode()">📝 Προσομοίωση Εξέτασης (40 Ερωτήσεις)</button>
         <button class="btn" onclick="finishQuiz()">Τελικό Σκόρ & Αναφορά Λαθών</button>
         <button class="btn" style="background-color: #64748b;" onclick="resetQuiz()">Επαναφορά</button>
@@ -298,41 +355,8 @@
 </div>
 
 <script>
-                function filterBySearch() {
-        const searchText = document.getElementById("quizSearch").value.toLowerCase();
-        const cards = document.querySelectorAll(".question-card");
-
-        cards.forEach(card => {
-            const questionTitle = card.querySelector(".question-title").textContent.toLowerCase();
-            const correctKey = card.getAttribute("data-correct");
-            
-            if (questionTitle.includes(searchText)) {
-                card.style.display = "block";
-                
-                // Αν ο χρήστης έχει γράψει κάτι στο search, δείξε αμέσως τη σωστή απάντηση
-                if (searchText !== "") {
-                    const correctLabel = card.querySelector(`.option-label[data-key="${correctKey}"]`);
-                    if (correctLabel) {
-                        correctLabel.classList.add("correct");
-                    }
-                }
-            } else {
-                card.style.display = "none";
-            }
-            
-            // Αν σβήσεις τελείως την αναζήτηση, επανέφερε τις ερωτήσεις που δεν έχουν απαντηθεί ακόμα
-            if (searchText === "" && !card.classList.contains("answered")) {
-                const correctLabel = card.querySelector(`.option-label[data-key="${correctKey}"]`);
-                if (correctLabel) {
-                    correctLabel.classList.remove("correct");
-                }
-            }
-        });
-    }
-
-
     const quizData = [
-        // ΚΕΦΑΛΑΙΟ 1
+        // ΚΕΦΑΛΑΙΟ 1[cite: 1]
         {
             chapter: "Κεφάλαιο 1",
             q: "1. Τι είναι ένας αλγόριθμος;",
@@ -526,7 +550,7 @@
             correct: "B"
         },
 
-        // ΚΕΦΑΛΑΙΟ 2
+        // ΚΕΦΑΛΑΙΟ 2[cite: 1]
         {
             chapter: "Κεφάλαιο 2",
             q: "1. Ποιο πρωτόκολλο χρησιμοποιείται από το HTTP/3;",
@@ -708,7 +732,7 @@
             correct: "C"
         },
 
-        // ΚΕΦΑΛΑΙΟ 3
+        // ΚΕΦΑΛΑΙΟ 3[cite: 1]
         {
             chapter: "Κεφάλαιο 3",
             q: "1. Ποιο είναι το προεπιλεγμένο port για HTTP;",
@@ -860,7 +884,7 @@
             correct: "A"
         },
 
-        // ΚΕΦΑΛΑΙΟ 4
+        // ΚΕΦΑΛΑΙΟ 4[cite: 1]
         {
             chapter: "Κεφάλαιο 4",
             q: "1. Ποια είναι η προεπιλεγμένη διεύθυνση πρόσβασης στον Tomcat server;",
@@ -1000,7 +1024,7 @@
             correct: "A"
         },
 
-        // ΚΕΦΑΛΑΙΟ 5
+        // ΚΕΦΑΛΑΙΟ 5[cite: 1]
         {
             chapter: "Κεφάλαιο 5",
             q: "1. Ποιο από τα παρακάτω είναι παράδειγμα δυναμικού πόρου;",
@@ -1134,7 +1158,7 @@
             correct: "A"
         },
 
-        // ΚΕΦΑΛΑΙΟ 6
+        // ΚΕΦΑΛΑΙΟ 6[cite: 1]
         {
             chapter: "Κεφάλαιο 6",
             q: "1. Ποιος είναι ο ρόλος του full-stack developer;",
@@ -1256,7 +1280,7 @@
             correct: "A"
         },
 
-        // ΚΕΦΑΛΑΙΟ 7
+        // ΚΕΦΑΛΑΙΟ 7[cite: 1]
         {
             chapter: "Κεφάλαιο 7",
             q: "1. Ποια είναι η βασική ιδιότητα του HTTP πρωτοκόλλου;",
@@ -1432,7 +1456,7 @@
             correct: "C"
         },
 
-        // ΚΕΦΑΛΑΙΟ 8
+        // ΚΕΦΑΛΑΙΟ 8[cite: 1]
         {
             chapter: "Κεφάλαιο 8",
             q: "1. Ποιο είναι το προεπιλεγμένο encoding για HTML φόρμες με μέθοδο POST;",
@@ -1566,7 +1590,7 @@
             correct: "B"
         },
 
-        // ΚΕΦΑΛΑΙΟ 9
+        // ΚΕΦΑΛΑΙΟ 9[cite: 1]
         {
             chapter: "Κεφάλαιο 9",
             q: "1. Ποιος είναι ο στόχος του project της διάλεξης;",
@@ -1688,7 +1712,7 @@
             correct: "B"
         },
 
-        // ΚΕΦΑΛΑΙΟ 10
+        // ΚΕΦΑΛΑΙΟ 10[cite: 1]
         {
             chapter: "Κεφάλαια 10",
             q: "1. Ποια είναι η βασική λειτουργία του Controller στο MVC;",
@@ -1816,7 +1840,7 @@
             correct: "B"
         },
 
-        // ΚΕΦΑΛΑΙΟ 11
+        // ΚΕΦΑΛΑΙΟ 11[cite: 1]
         {
             chapter: "Κεφάλαιο 11",
             q: "1. Ποια είναι η προεπιλεγμένη πόρτα για HTTPS;",
@@ -1940,7 +1964,7 @@
         {
             chapter: "Κεφάλαιο 11",
             q: "25. Ποιο από τα παρακάτω είναι χαρακτηριστικό του ORM;",
-            options: { A: "Δημιουργεί HTML", B: "Χαρτογραφεί αντικείμενα σε πίνακες", C: "Εκτελεί JavaScript", D: "Δημιουργεί CSS" },
+            options: { A: "Δημιουργεί HTML", B: "Χαρτογραφεί αντικείομενα σε πίνακες", C: "Εκτελεί JavaScript", D: "Δημιουργεί CSS" },
             correct: "B"
         },
         {
@@ -1974,7 +1998,7 @@
             correct: "B"
         },
 
-        // ΚΕΦΑΛΑΙΟ 12
+        // ΚΕΦΑΛΑΙΟ 12[cite: 1]
         {
             chapter: "Κεφάλαιο 12",
             q: "1. Ποιο είναι το προεπιλεγμένο URL του Apache Tomcat;",
@@ -2125,6 +2149,7 @@
             options: { A: "index.html", B: "main.java", C: "web.xml", D: "style.css" },
             correct: "A"
         },
+        // ΠΡΟΣΘΗΚΗ ΑΠΟ ΠΑΛΙΑ ΘΕΜΑΤΑ ΕΞΕΤΑΣΕΩΝ
         {
             chapter: "Κεφάλαιο 12",
             q: "26. Ποιο από τα παρακάτω ΔΕΝ επηρεάζει το αν δύο URLs έχουν την ίδια προέλευση (same origin);",
@@ -2165,13 +2190,102 @@
         return arr;
     }
 
+    // MULTISELECT DROPDOWN MANAGEMENT
+    function toggleCheckboxArea() {
+        const area = document.getElementById("checkboxesArea");
+        area.style.display = area.style.display === "block" ? "none" : "block";
+    }
+
+    window.addEventListener("click", function(e) {
+        if (!document.getElementById("multiSelectDropdown").contains(e.target) && 
+            !document.getElementById("checkboxesArea").contains(e.target)) {
+            document.getElementById("checkboxesArea").style.display = "none";
+        }
+    });
+
+    function checkAllChapters(source) {
+        const checkboxes = document.querySelectorAll(".chapter-check");
+        checkboxes.forEach(cb => cb.checked = source.checked);
+        updateMultiFilter();
+    }
+
+    function updateMultiFilter() {
+        isExamMode = false;
+        document.getElementById("examBtn").classList.remove("btn-exam-active");
+        document.getElementById("scoreBox").style.display = "none";
+        document.getElementById("mistakesContainer").style.display = "none";
+
+        const checkedBoxes = document.querySelectorAll(".chapter-check:checked");
+        const selectedChapters = Array.from(checkedBoxes).map(cb => cb.value);
+        const dropdownBox = document.getElementById("multiSelectDropdown");
+
+        if (selectedChapters.length === 0) {
+            currentQuestions = [];
+            dropdownBox.classList.remove("select-active");
+            dropdownBox.querySelector("span").textContent = "🔍 Επιλογή Κεφαλαίων";
+        } else if (selectedChapters.length === document.querySelectorAll(".chapter-check").length) {
+            currentQuestions = [...quizData];
+            dropdownBox.classList.add("select-active");
+            dropdownBox.querySelector("span").textContent = "✨ Όλα τα Κεφάλαια";
+            document.getElementById("selectAllChapters").checked = true;
+        } else {
+            currentQuestions = quizData.filter(item => selectedChapters.includes(item.chapter));
+            dropdownBox.classList.add("select-active");
+            dropdownBox.querySelector("span").textContent = `📚 Ενεργά (${selectedChapters.length})`;
+            document.getElementById("selectAllChapters").checked = false;
+        }
+
+        renderQuestions();
+    }
+
+    function clearFilters() {
+        document.getElementById("selectAllChapters").checked = false;
+        document.querySelectorAll(".chapter-check").forEach(cb => cb.checked = false);
+        if(document.getElementById("quizSearch")) document.getElementById("quizSearch").value = "";
+        
+        const dropdownBox = document.getElementById("multiSelectDropdown");
+        dropdownBox.classList.remove("select-active");
+        dropdownBox.querySelector("span").textContent = "🔍 Επιλογή Κεφαλαίων";
+        document.getElementById("examBtn").classList.remove("btn-exam-active");
+        
+        isExamMode = false;
+        currentQuestions = [...quizData];
+        renderQuestions();
+    }
+
+    function filterBySearch() {
+        const searchText = document.getElementById("quizSearch").value.toLowerCase();
+        const cards = document.querySelectorAll(".question-card");
+
+        cards.forEach(card => {
+            const questionTitle = card.querySelector(".question-title").textContent.toLowerCase();
+            const correctKey = card.getAttribute("data-correct");
+            
+            if (questionTitle.includes(searchText)) {
+                card.style.display = "block";
+                if (searchText !== "") {
+                    const correctLabel = card.querySelector(`.option-label[data-key="${correctKey}"]`);
+                    if (correctLabel) correctLabel.classList.add("correct");
+                }
+            } else {
+                card.style.display = "none";
+            }
+            
+            if (searchText === "" && !card.classList.contains("answered")) {
+                const correctLabel = card.querySelector(`.option-label[data-key="${correctKey}"]`);
+                if (correctLabel) correctLabel.classList.remove("correct");
+            }
+        });
+    }
+
     function startExamMode() {
         isExamMode = true;
-        
-        // Χρωματισμός κουμπιού εξέτασης και καθαρισμός dropdown
         document.getElementById("examBtn").classList.add("btn-exam-active");
-        document.getElementById("chapterFilter").classList.remove("select-active");
-        document.getElementById("chapterFilter").value = "all";
+        document.getElementById("multiSelectDropdown").classList.remove("select-active");
+        document.getElementById("multiSelectDropdown").querySelector("span").textContent = "🔍 Επιλογή Κεφαλαίων";
+        
+        document.querySelectorAll(".chapter-check").forEach(cb => cb.checked = false);
+        document.getElementById("selectAllChapters").checked = false;
         
         document.getElementById("scoreBox").style.display = "none";
         document.getElementById("mistakesContainer").style.display = "none";
@@ -2183,28 +2297,7 @@
     }
 
     function loadQuiz() {
-        isExamMode = false;
-        const filterValue = document.getElementById("chapterFilter").value;
-        const examBtn = document.getElementById("examBtn");
-        
-        // Διαχείριση χρωμάτων ελέγχου χρηστών
-        if (filterValue !== "all") {
-            document.getElementById("chapterFilter").classList.add("select-active");
-            examBtn.classList.remove("btn-exam-active");
-        } else {
-            document.getElementById("chapterFilter").classList.remove("select-active");
-        }
-        
-        document.getElementById("scoreBox").style.display = "none";
-        document.getElementById("mistakesContainer").style.display = "none";
-
-        if (filterValue === "all") {
-            currentQuestions = [...quizData];
-        } else {
-            currentQuestions = quizData.filter(item => item.chapter === filterValue);
-        }
-
-        renderQuestions();
+        clearFilters();
     }
 
     function renderQuestions() {
@@ -2231,11 +2324,13 @@
             `;
             quizContainer.appendChild(card);
         });
+        
+        // Αν υπήρχε κείμενο στο search, ξανατρέχει για να πρασινίσει ό,τι πρέπει
+        if(document.getElementById("quizSearch").value !== "") filterBySearch();
     }
 
     function handleOptionClick(qIndex, selectedKey) {
         const card = document.getElementById(`card-${qIndex}`);
-        
         if (card.classList.contains("answered")) return;
         card.classList.add("answered");
 
@@ -2300,9 +2395,13 @@
 
         const total = currentQuestions.length;
         const scoreBox = document.getElementById("scoreBox");
-        scoreBox.style.display = "block";
         
-        // Χρωματισμός του border του score-box σε πράσινο όπως ζήτησες
+        if(total === 0) {
+            alert("Παρακαλώ επιλέξτε τουλάχιστον ένα κεφάλαιο!");
+            return;
+        }
+        
+        scoreBox.style.display = "block";
         scoreBox.style.borderColor = "#10b981";
 
         if (isExamMode) {
@@ -2342,23 +2441,7 @@
     }
 
     function resetQuiz() {
-        // Καθαρισμός ενεργών χρωμάτων ελέγχου κατά το reset
-        document.getElementById("examBtn").classList.remove("btn-exam-active");
-        document.getElementById("chapterFilter").classList.remove("select-active");
-        document.getElementById("chapterFilter").value = "all";
-        
-        // Καθαρισμός επιλογών
-        currentQuestions.forEach(q => delete q.userChoice);
-
-        if (isExamMode) {
-            startExamMode();
-        } else {
-            loadQuiz();
-        }
-    }
-
-    function changeChapter() {
-        loadQuiz();
+        clearFilters();
     }
 
     window.onload = loadQuiz;

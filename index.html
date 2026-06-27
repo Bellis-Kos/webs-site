@@ -298,22 +298,23 @@
 </div>
 
 <script>
-        function filterBySearch() {
+            function filterBySearch() {
         const searchText = document.getElementById("quizSearch").value.toLowerCase();
         const cards = document.querySelectorAll(".question-card");
 
         cards.forEach(card => {
+            // Παίρνουμε μόνο το κείμενο της εκφώνησης (τίτλος ερώτησης)
             const questionTitle = card.querySelector(".question-title").textContent.toLowerCase();
-            const options = card.querySelector(".options-list").textContent.toLowerCase();
             
-            // Αν το κείμενο αναζήτησης υπάρχει στον τίτλο ή στις επιλογές, δείξε την κάρτα, αλλιώς κρύψτην
-            if (questionTitle.includes(searchText) || options.includes(searchText)) {
+            // Ψάχνουμε τη λέξη-κλειδί ΑΠΟΚΛΕΙΣΤΙΚΑ στην εκφώνηση
+            if (questionTitle.includes(searchText)) {
                 card.style.display = "block";
             } else {
                 card.style.display = "none";
             }
         });
     }
+
 
     const quizData = [
         // ΚΕΦΑΛΑΙΟ 1

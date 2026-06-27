@@ -54,12 +54,13 @@
             justify-content: center;
             flex-wrap: wrap;
             position: static; 
-            background-color: var(--card-bg);
+            background-color: var(--card-bg); 
             padding: 15px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
             box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
         }
+
         select {
             padding: 10px 20px;
             font-size: 16px;
@@ -68,6 +69,13 @@
             background-color: white;
             cursor: pointer;
             outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .select-active {
+            background-color: #10b981 !important;
+            color: white !important;
+            font-weight: bold;
         }
 
         .btn {
@@ -78,16 +86,31 @@
             font-size: 16px;
             border-radius: 8px;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2s, transform 0.1s;
             font-weight: 500;
         }
 
         .btn:hover { background-color: var(--primary-hover); }
+        
+        .btn:active {
+            background-color: #1d4ed8;
+            transform: scale(0.98);
+        }
 
         .btn-exam {
             background-color: var(--exam-color);
         }
         .btn-exam:hover { background-color: var(--exam-hover); }
+        
+        .btn-exam:active {
+            background-color: #6d28d9;
+        }
+
+        .btn-exam-active {
+            background-color: #10b981 !important;
+            color: white !important;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
 
         .quiz-container { display: flex; flex-direction: column; gap: 20px; }
 
@@ -163,6 +186,7 @@
             font-size: 18px;
             display: none;
             box-shadow: 0 4px 10px rgb(0 0 0 / 0.05);
+            transition: all 0.3s ease;
         }
 
         .score-box h2 {
@@ -243,7 +267,7 @@
             <option value="Κεφάλαιο 11">Κεφάλαιο 11</option>
             <option value="Κεφάλαιο 12">Κεφάλαιο 12</option>
         </select>
-        <button class="btn btn-exam" onclick="startExamMode()">📝 Προσομοίωση Εξέτασης (40 Ερωτήσεις)</button>
+        <button id="examBtn" class="btn btn-exam" onclick="startExamMode()">📝 Προσομοίωση Εξέτασης (40 Ερωτήσεις)</button>
         <button class="btn" onclick="finishQuiz()">Τελικό Σκόρ & Αναφορά Λαθών</button>
         <button class="btn" style="background-color: #64748b;" onclick="resetQuiz()">Επαναφορά</button>
     </div>
@@ -2054,8 +2078,8 @@
         }
     ];
 
-    let currentQuestions = []; // Αποθηκεύει τις ερωτήσεις που εμφανίζονται τώρα
-    let isExamMode = false;     // True αν είμαστε σε λειτουργία τυχαίων 40 ερωτήσεων
+    let currentQuestions = []; 
+    let isExamMode = false;     
 
     function escapeHTML(str) {
         return str.replace(/&/g, "&amp;")
@@ -2065,7 +2089,6 @@
                   .replace(/'/g, "&#039;");
     }
 
-    // Ανακάτεμα πίνακα (Fisher-Yates)
     function shuffleArray(array) {
         let arr = [...array];
         for (let i = arr.length - 1; i > 0; i--) {
@@ -2075,24 +2098,36 @@
         return arr;
     }
 
-    // 1. Λειτουργία Έναρξης Εξέτασης (40 τυχαίες ερωτήσεις)
     function startExamMode() {
         isExamMode = true;
+        
+        // Χρωματισμός κουμπιού εξέτασης και καθαρισμός dropdown
+        document.getElementById("examBtn").classList.add("btn-exam-active");
+        document.getElementById("chapterFilter").classList.remove("select-active");
         document.getElementById("chapterFilter").value = "all";
+        
         document.getElementById("scoreBox").style.display = "none";
         document.getElementById("mistakesContainer").style.display = "none";
 
-        // Ανακατεύουμε όλες τις ερωτήσεις και παίρνουμε τις πρώτες 40
         let shuffled = shuffleArray(quizData);
         currentQuestions = shuffled.slice(0, 40);
 
         renderQuestions();
     }
 
-    // Φόρτωση κανονικού Quiz με βάση το Φίλτρο Κεφαλαίου
     function loadQuiz() {
         isExamMode = false;
         const filterValue = document.getElementById("chapterFilter").value;
+        const examBtn = document.getElementById("examBtn");
+        
+        // Διαχείριση χρωμάτων ελέγχου χρηστών
+        if (filterValue !== "all") {
+            document.getElementById("chapterFilter").classList.add("select-active");
+            examBtn.classList.remove("btn-exam-active");
+        } else {
+            document.getElementById("chapterFilter").classList.remove("select-active");
+        }
+        
         document.getElementById("scoreBox").style.display = "none";
         document.getElementById("mistakesContainer").style.display = "none";
 
@@ -2105,7 +2140,6 @@
         renderQuestions();
     }
 
-    // Σχεδίαση των ερωτήσεων στην οθόνη
     function renderQuestions() {
         const quizContainer = document.getElementById("quiz");
         quizContainer.innerHTML = "";
@@ -2132,11 +2166,9 @@
         });
     }
 
-    // Διαχείριση κλικ (Άμεσος χρωματισμός ανά ερώτηση)
     function handleOptionClick(qIndex, selectedKey) {
         const card = document.getElementById(`card-${qIndex}`);
         
-        // Αν έχει ήδη απαντηθεί η συγκεκριμένη ερώτηση, την κλειδώνουμε
         if (card.classList.contains("answered")) return;
         card.classList.add("answered");
 
@@ -2145,21 +2177,19 @@
 
         labels.forEach(label => {
             const labelKey = label.getAttribute("data-key");
-            label.classList.add("disabled"); // Απενεργοποίηση για να μην αλλάξει η απάντηση
+            label.classList.add("disabled"); 
 
             if (labelKey === correctKey) {
-                label.classList.add("correct"); // Πάντα πρασινίζει η σωστή
+                label.classList.add("correct"); 
             }
             if (labelKey === selectedKey && selectedKey !== correctKey) {
-                label.classList.add("incorrect"); // Κοκκινίζει η επιλογή του χρήστη αν είναι λάθος
+                label.classList.add("incorrect"); 
             }
         });
 
-        // Αποθήκευση της επιλογής στο αντικείμενο της ερώτησης
         currentQuestions[qIndex].userChoice = selectedKey;
     }
 
-    // Υποβολή και εμφάνιση αναφοράς λαθών
     function finishQuiz() {
         let score = 0;
         let mistakesHTML = "";
@@ -2172,7 +2202,6 @@
                 if (userChoice === item.correct) {
                     score++;
                 } else {
-                    // Καταγραφή λάθους
                     mistakesHTML += `
                         <div class="mistake-item">
                             <div class="chapter-tag" style="margin-bottom:5px;">${escapeHTML(item.chapter)}</div>
@@ -2185,7 +2214,6 @@
                     `;
                 }
             } else {
-                // Αν έμεινε αναπάντητο
                 mistakesHTML += `
                     <div class="mistake-item" style="border-left-color: #64748b; background-color: #f1f5f9;">
                         <div class="chapter-tag" style="margin-bottom:5px; background-color:#e2e8f0; color:#475569;">${escapeHTML(item.chapter)}</div>
@@ -2196,7 +2224,6 @@
                         </div>
                     </div>
                 `;
-                // Αν δεν απαντήθηκε, δείχνουμε τη σωστή πάνω στην κάρτα
                 if (card) {
                     const correctLabel = card.querySelector(`.option-label[data-key="${item.correct}"]`);
                     if (correctLabel) correctLabel.classList.add("correct");
@@ -2204,20 +2231,15 @@
             }
         });
 
-        // Υπολογισμός τελικού σκορ
         const total = currentQuestions.length;
         const scoreBox = document.getElementById("scoreBox");
         scoreBox.style.display = "block";
+        
+        // Χρωματισμός του border του score-box σε πράσινο όπως ζήτησες
+        scoreBox.style.borderColor = "#10b981";
 
         if (isExamMode) {
-            // Υπολογισμός με βάση τη φόρμουλα: Σωστά - (Λάθη * 0.25) αν υπάρχει αρνητική, 
-            // αλλά εδώ εφαρμόζουμε το καθαρό ποσοστό ή τη βαθμολογία της σχολής.
             let wrongCount = total - score;
-            // Αν θέλετε να βάλετε την κλασική αρνητική βαθμολογία:
-            let finalGrade = score - (wrongCount * 0.25);
-            if (finalGrade < 0) finalGrade = 0;
-            
-            // Μετατροπή σε κλίμακα 0-5 (σύμφωνα με τη φόρμουλα της φωτογραφίας)
             let formulaGrade = (score - (0.5 * wrongCount)) / 8;
             if (formulaGrade < 0) formulaGrade = 0;
 
@@ -2239,7 +2261,6 @@
             `;
         }
 
-        // Εμφάνιση Αναφοράς Λαθών
         const mistakesContainer = document.getElementById("mistakesContainer");
         const mistakesList = document.getElementById("mistakesList");
         mistakesContainer.style.display = "block";
@@ -2254,7 +2275,14 @@
     }
 
     function resetQuiz() {
-        userAnswers = {};
+        // Καθαρισμός ενεργών χρωμάτων ελέγχου κατά το reset
+        document.getElementById("examBtn").classList.remove("btn-exam-active");
+        document.getElementById("chapterFilter").classList.remove("select-active");
+        document.getElementById("chapterFilter").value = "all";
+        
+        // Καθαρισμός επιλογών
+        currentQuestions.forEach(q => delete q.userChoice);
+
         if (isExamMode) {
             startExamMode();
         } else {
@@ -2268,6 +2296,5 @@
 
     window.onload = loadQuiz;
 </script>
-
 </body>
 </html>

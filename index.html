@@ -77,6 +77,19 @@
             color: white !important;
             font-weight: bold;
         }
+        #quizSearch {
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            outline: none;
+            width: 100%;
+            max-width: 250px;
+            transition: border-color 0.2s;
+        }
+        #quizSearch:focus {
+            border-color: var(--primary-color);
+        }
 
         .btn {
             background-color: var(--primary-color);
@@ -252,6 +265,9 @@
     </header>
 
     <div class="controls">
+                <!-- Πρόσθεσε αυτή τη γραμμή στην αρχή των controls -->
+        <input type="text" id="quizSearch" placeholder="🔍 Αναζήτηση ερώτησης..." onkeyup="filterBySearch()">
+
         <select id="chapterFilter" onchange="changeChapter()">
             <option value="all">Όλα τα Κεφάλαια</option>
             <option value="Κεφάλαιο 1">Κεφάλαιο 1</option>
@@ -282,6 +298,23 @@
 </div>
 
 <script>
+        function filterBySearch() {
+        const searchText = document.getElementById("quizSearch").value.toLowerCase();
+        const cards = document.querySelectorAll(".question-card");
+
+        cards.forEach(card => {
+            const questionTitle = card.querySelector(".question-title").textContent.toLowerCase();
+            const options = card.querySelector(".options-list").textContent.toLowerCase();
+            
+            // Αν το κείμενο αναζήτησης υπάρχει στον τίτλο ή στις επιλογές, δείξε την κάρτα, αλλιώς κρύψτην
+            if (questionTitle.includes(searchText) || options.includes(searchText)) {
+                card.style.display = "block";
+            } else {
+                card.style.display = "none";
+            }
+        });
+    }
+
     const quizData = [
         // ΚΕΦΑΛΑΙΟ 1
         {

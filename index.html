@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz - Ανάπτυξη Web Εφαρμογών</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-color: #1e293b;
+            --correct-color: #10b981;
+            --incorrect-color: #ef4444;
+            --border-color: #e2e8f0;
+            --exam-color: #8b5cf6;
+            --exam-hover: #7c3aed;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        h1 { margin: 0; font-size: 24px; }
+        p.subtitle { margin: 10px 0 0 0; opacity: 0.9; font-size: 14px; }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+            background-color: var(--bg-color);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgb(0 0 0 / 0.05);
+        }
+
+        select {
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: white;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 500;
+        }
+
+        .btn:hover { background-color: var(--primary-hover); }
+
+        .btn-exam {
+            background-color: var(--exam-color);
+        }
+        .btn-exam:hover { background-color: var(--exam-hover); }
+
+        .quiz-container { display: flex; flex-direction: column; gap: 20px; }
+
+        .question-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgb(0 0 0 / 0.05);
+        }
+
+        .question-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .chapter-tag {
+            display: inline-block;
+            background-color: #e0f2fe;
+            color: #0369a1;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-label:hover { background-color: #f1f5f9; }
+        .option-label input { margin-right: 12px; transform: scale(1.1); }
+
+        .option-label.disabled {
+            pointer-events: none;
+        }
+
+        .option-label.correct {
+            background-color: #d1fae5 !important;
+            border-color: var(--correct-color) !important;
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .option-label.incorrect {
+            background-color: #fee2e2 !important;
+            border-color: var(--incorrect-color) !important;
+            color: #991b1b;
+        }
+
+        .score-box {
+            background-color: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            display: none;
+            box-shadow: 0 4px 10px rgb(0 0 0 / 0.05);
+        }
+
+        .score-box h2 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+
+        .mistakes-container {
+            margin-top: 25px;
+            background-color: #ffffff;
+            border: 1px solid #fca5a5;
+            border-radius: 12px;
+            padding: 20px;
+            display: none;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+        }
+
+        .mistakes-title {
+            color: #991b1b;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #fee2e2;
+            padding-bottom: 8px;
+        }
+
+        .mistake-item {
+            padding: 12px;
+            border-left: 4px solid var(--incorrect-color);
+            background-color: #fff5f5;
+            margin-bottom: 12px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .mistake-q {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .mistake-details {
+            font-size: 14px;
+        }
+
+        .badge-result {
+            display: inline-block;
+            padding: 8px 16px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .badge-pass { background-color: #d1fae5; color: #065f46; }
+        .badge-fail { background-color: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Interactive Quiz Γνώσεων</h1>
+        <p class="subtitle">Ερωτήσεις Πολλαπλής Επιλογής & Προσομοίωση Εξετάσεων</p>
+    </header>
+
+    <div class="controls">
+        <select id="chapterFilter" onchange="changeChapter()">
+            <option value="all">Όλα τα Κεφάλαια</option>
+            <option value="Κεφάλαιο 1">Κεφάλαιο 1</option>
+            <option value="Κεφάλαιο 2">Κεφάλαιο 2</option>
+            <option value="Κεφάλαιο 3">Κεφάλαιο 3</option>
+            <option value="Κεφάλαιο 4">Κεφάλαιο 4</option>
+            <option value="Κεφάλαιο 5">Κεφάλαιο 5</option>
+            <option value="Κεφάλαιο 6">Κεφάλαιο 6</option>
+            <option value="Κεφάλαιο 7">Κεφάλαιο 7</option>
+            <option value="Κεφάλαιο 8">Κεφάλαιο 8</option>
+            <option value="Κεφάλαιο 9">Κεφάλαιο 9</option>
+            <option value="Κεφάλαια 10">Κεφάλαιο 10</option>
+            <option value="Κεφάλαιο 11">Κεφάλαιο 11</option>
+            <option value="Κεφάλαιο 12">Κεφάλαιο 12</option>
+        </select>
+        <button class="btn btn-exam" onclick="startExamMode()">📝 Προσομοίωση Εξέτασης (40 Ερωτήσεις)</button>
+        <button class="btn" onclick="finishQuiz()">Τελικό Σκόρ & Αναφορά Λαθών</button>
+        <button class="btn" style="background-color: #64748b;" onclick="resetQuiz()">Επαναφορά</button>
+    </div>
+
+    <div id="quiz" class="quiz-container"></div>
+    <div id="scoreBox" class="score-box"></div>
+    
+    <div id="mistakesContainer" class="mistakes-container">
+        <div class="mistakes-title">❌ Αναφορά Λαθών (Επανεξέταση)</div>
+        <div id="mistakesList"></div>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        // ΚΕΦΑΛΑΙΟ 1
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "1. Τι είναι ένας αλγόριθμος;",
+            options: { A: "Ένα πρόγραμμα σε Java", B: "Μια σαφής και ακριβής περιγραφή βημάτων", C: "Ένα αρχείο HTML", D: "Ένα λειτουργικό σύστημα" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "2. Ποια από τις παρακάτω είναι γλώσσα χαμηλού επιπέδου;",
+            options: { A: "Java", B: "Python", C: "Assembly", D: "JavaScript" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "3. Ποια από τις παρακάτω γλώσσες είναι αντικειμενοστραφής;",
+            options: { A: "C", B: "Java", C: "SQL", D: "HTML" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "4. Ποια είναι η βασική διαφορά μεταξύ JDK και JRE;",
+            options: { A: "Το JDK περιλαμβάνει μόνο το runtime", B: "Το JRE περιλαμβάνει το compiler", C: "Το JDK περιλαμβάνει εργαλεία ανάπτυξης, το JRE μόνο εκτέλεση", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "5. Ποια είναι η σωστή σειρά του κύκλου εντολής (Instruction Cycle);",
+            options: { A: "Execute → Fetch → Decode", B: "Fetch → Decode → Execute → Memory Access → Write-Back", C: "Decode → Execute → Fetch", D: "Write-Back → Fetch → Execute" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "6. Ποιο από τα παρακάτω είναι λειτουργικό σύστημα;",
+            options: { A: "JSON", B: "Eclipse", C: "Ubuntu", D: "HTML" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "7. Ποια είναι η διαφορά μεταξύ προγράμματος και διεργασίας;",
+            options: { A: "Δεν υπάρχει διαφορά", B: "Το πρόγραμμα εκτελείται, η διεργασία είναι στατική", C: "Το πρόγραμμα είναι στατικό, η διεργασία είναι δυναμική εκτέλεση", D: "Το πρόγραμμα είναι διεπαφή χρήστη" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "8. Ποια πληροφορία δεν περιλαμβάνεται στο Process Control Block (PCB);",
+            options: { A: "Κατάσταση διεργασίας", B: "MAC διεύθυνση", C: "Καταχωρητές CPU", D: "Πληροφορίες διαχείρισης μνήμης" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "9. Ποια είναι η βασική διαφορά μεταξύ Internet και WWW;",
+            options: { A: "Το WWW είναι το φυσικό δίκτυο", B: "Το Internet είναι υπηρεσία του WWW", C: "Το WWW είναι υπηρεσία πάνω στο Internet", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "10. Ποιο από τα παρακάτω δεν είναι πρωτόκολλο του TCP/IP stack;",
+            options: { A: "HTTP", B: "DNS", C: "XML", D: "TCP" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "11. Ποια συσκευή λειτουργεί στο επίπεδο σύνδεσης δεδομένων (Data Link Layer);",
+            options: { A: "Router", B: "Switch", C: "Modem", D: "Repeater" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "12. Ποιο από τα παρακάτω είναι χαρακτηριστικό του REST;",
+            options: { A: "Χρησιμοποιεί SOAP", B: "Είναι stateful", C: "Χρησιμοποιεί HTTP και είναι stateless", D: "Είναι λειτουργικό σύστημα" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "13. Ποια είναι η σωστή σύνταξη για JSON αντικείμενο;",
+            options: { A: "[\"key\": \"value\"]", B: "{\"key\": \"value\"}", C: "(\"key\": \"value\")", D: "value" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "14. Ποια είναι η διαφορά μεταξύ HTML και HTTP;",
+            options: { A: "Το HTML είναι πρωτόκολλο, το HTTP είναι γλώσσα σήμανσης", B: "Το HTTP είναι πρωτόκολλο, το HTML είναι γλώσσα σήμανσης", C: "Και τα δύο είναι γλώσσες προγραμματισμού", D: "Το HTTP χρησιμοποιείται μόνο σε κινητά" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "15. Ποιο από τα παρακάτω περιγράφει καλύτερα το MVC pattern;",
+            options: { A: "Το View περιέχει τη λογική της εφαρμογής", B: "Το Model είναι η διεπαφή χρήστη", C: "Το Controller διαχειρίζεται τη ροή δεδομένων", D: "Το Controller είναι το backend" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "16. Ποιο από τα παρακάτω δεν ανήκει στο τρίπτυχο CIA της ασφάλειας πληροφοριών;",
+            options: { A: "Εμπιστευτικότητα", B: "Ακεραιότητα", C: "Διαθεσιμότητα", D: "Ευχρηστία" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "17. Ποιο εργαλείο χρησιμοποιείται για containerization;",
+            options: { A: "Eclipse", B: "Docker", C: "JSON", D: "HTML" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "18. Ποια είναι η κύρια λειτουργία του πρωτοκόλλου HTTP;",
+            options: { A: "Εκτέλεση JavaScript", B: "Μεταφορά αρχείων μέσω FTP", C: "Ανταλλαγή δεδομένων σε επίπεδο εφαρμογής", D: "Διαχείριση μνήμης" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "19. Ποια είναι η βασική λειτουργία ενός Java Servlet;",
+            options: { A: "Εκτελεί HTML στον client", B: "Διαχειρίζεται αιτήματα και απαντήσεις στον server", C: "Δημιουργεί CSS αρχεία", D: "Εκτελεί Python scripts" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "20. Ποιο από τα παρακάτω είναι χαρακτηριστικό του JSON;",
+            options: { A: "Χρησιμοποιεί tags όπως το XML", B: "Είναι δυαδική μορφή δεδομένων", C: "Χρησιμοποιεί ζεύγη όνομα/τιμή και πίνακες", D: "Δεν υποστηρίζει αντικείμενα" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "21. Ποια είναι η λειτουργία του WAR αρχείου σε Java Web εφαρμογές;",
+            options: { A: "Εκτελείται απευθείας από τον browser", B: "Περιέχει μόνο HTML αρχεία", C: "Είναι αρχείο ZIP με δομή Java εφαρμογής", D: "Είναι αρχείο βάσης δεδομένων" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "22. Ποιο IDE δεν αναφέρεται στη διάλεξη;",
+            options: { A: "Eclipse", B: "IntelliJ IDEA", C: "Visual Studio Code", D: "NetBeans" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "23. Ποια είναι η διαφορά μεταξύ στατικής και δυναμικής ιστοσελίδας;",
+            options: { A: "Η στατική δημιουργείται με JavaScript", B: "Η δυναμική αλλάζει περιεχόμενο μέσω server-side λογικής", C: "Η στατική απαιτεί REST API", D: "Η δυναμική δεν χρησιμοποιεί HTML" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "24. Ποια είναι η κύρια λειτουργία του Docker;",
+            options: { A: "Δημιουργία HTML σελίδων", B: "Ανάπτυξη REST APIs", C: "Διαχείριση containerized εφαρμογών", D: "Ανάλυση δεδομένων" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "25. Ποιο από τα παρακάτω δεν είναι επίπεδο του TCP/IP μοντέλου;",
+            options: { A: "Εφαρμογής (Application)", B: "Μεταφοράς (Transport)", C: "Δικτύου (Network)", D: "Παρουσίασης (Presentation)" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "26. Ποια είναι η λειτουργία του MAC address;",
+            options: { A: "Αναγνωρίζει μοναδικά μια συσκευή στο δίκτυο", B: "Εκτελεί JavaScript", C: "Αποθηκεύει δεδομένα", D: "Μεταφράζει HTML σε CSS" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "27. Ποια είναι η βασική λειτουργία του Switch σε δίκτυο;",
+            options: { A: "Μετατρέπει σήματα από αναλογικά σε ψηφιακά", B: "Εκτελεί routing", C: "Φιλτράρει πακέτα με βάση MAC διευθύνσεις", D: "Παρέχει πρόσβαση στο Internet" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "28. Ποιο από τα παρακάτω δεν είναι client-side τεχνολογία;",
+            options: { A: "HTML", B: "CSS", C: "JavaScript", D: "Java Servlet" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "29. Ποια είναι η βασική ιδέα του Event-Driven Programming;",
+            options: { A: "Εκτελείται σειριακά", B: "Αντιδρά σε γεγονότα όπως κλικ ή είσοδο δεδομένων", C: "Δεν χρησιμοποιείται σε Web εφαρμογές", D: "Είναι αποκλειστικά για Python" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "30. Ποια από τις παρακάτω αρχές δεν ανήκει στις 10 ευχρηστικές αρχές του Jakob Nielsen;",
+            options: { A: "Ορατότητα κατάστασης συστήματος", B: "Ευελιξία και αποδοτικότητα", C: "Ασφάλεια δεδομένων", D: "Αναγνώριση αντί για ανάκληση" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "31. Ποιο στοιχείο του MVC περιέχει τη λογική των δεδομένων;",
+            options: { A: "View", B: "Controller", C: "Model", D: "HTML" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 1",
+            q: "32. Ποια είναι η λειτουργία του Deployment Descriptor σε Java Web εφαρμογές;",
+            options: { A: "Δημιουργεί CSS", B: "Περιγράφει τη δομή και τις ρυθμίσεις της εφαρμογής", C: "Εκτελεί JavaScript", D: "Μεταφράζει HTML σε XML" },
+            correct: "B"
+        },
+
+        // ΚΕΦΑΛΑΙΟ 2
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "1. Ποιο πρωτόκολλο χρησιμοποιείται από το HTTP/3;",
+            options: { A: "TCP", B: "UDP", C: "FTP", D: "SMTP" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "2. Ποια είναι η προεπιλεγμένη θύρα για HTTP;",
+            options: { A: "21", B: "25", C: "80", D: "443" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "3. Ποια από τις παρακάτω πληροφορίες δεν απαιτείται για TCP σύνδεση;",
+            options: { A: "IP διεύθυνση server", B: "Port server", C: "MAC διεύθυνση", D: "IP διεύθυνση client" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "4. Ποια είναι η βασική λειτουργία του TCP;",
+            options: { A: "Κρυπτογράφηση δεδομένων", B: "Παράδοση δεδομένων με σειρά και χωρίς σφάλματα", C: "Εκτέλεση HTML", D: "Μετατροπή IP σε domain" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "5. Ποια είναι η διαφορά μεταξύ HTTP και HTTPS;",
+            options: { A: "Το HTTPS είναι πιο γρήγορο", B: "Το HTTPS χρησιμοποιεί κρυπτογράφηση", C: "Το HTTP υποστηρίζει μόνο HTML", D: "Το HTTPS δεν υποστηρίζεται από browsers" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "6. Τι είναι URI;",
+            options: { A: "Διεύθυνση IP", B: "Μοναδικός αναγνωριστής πόρου", C: "Πρωτόκολλο", D: "HTML ετικέτα" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "7. Ποια είναι η διαφορά μεταξύ URL και URI;",
+            options: { A: "Το URL είναι υποσύνολο του URI", B: "Το URI είναι υποσύνολο του URL", C: "Είναι ταυτόσημα", D: "Το URI χρησιμοποιείται μόνο σε HTML" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "8. Ποιο από τα παρακάτω είναι έγκυρο URL;",
+            options: { A: "mailto:someone@example.com", B: "html://example.com", C: "tcp://example.com", D: "dns://example.com" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "9. Ποιο μέρος του URL καθορίζει το πρωτόκολλο;",
+            options: { A: "Host", B: "Path", C: "Scheme", D: "Port" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "10. Ποιο από τα παρακάτω είναι παράδειγμα query string;",
+            options: { A: "/products", B: "?id=123&color=blue", C: "#section1", D: ":8080" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "11. Ποιο είναι το πρώτο στοιχείο σε HTTP Request;",
+            options: { A: "Headers", B: "Body", C: "Start Line", D: "Status Code" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "12. Ποιο status code σημαίνει επιτυχία;",
+            options: { A: "404", B: "500", C: "200", D: "302" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "13. Ποιο header δηλώνει τον τύπο περιεχομένου;",
+            options: { A: "Accept", B: "Content-Type", C: "Host", D: "User-Agent" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "14. Ποιο από τα παρακάτω είναι MIME τύπος;",
+            options: { A: "text/html", B: "http://example.com", C: "HTML5", D: "TCP/IP" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "15. Ποια είναι η λειτουργία των cookies στο HTTP;",
+            options: { A: "Εκτελούν JavaScript", B: "Αποθηκεύουν δεδομένα στον client", C: "Αποθηκεύουν δεδομένα στον server", D: "Μεταφράζουν HTML σε CSS" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "16. Ποιο στοιχείο HTML χρησιμοποιείται για εικόνες;",
+            options: { A: "<image>", B: "<img>", C: "<pic>", D: "<media>" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "17. Ποιο attribute είναι υποχρεωτικό στο <img>;",
+            options: { A: "href", B: "src", C: "style", D: "id" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "18. Ποιο στοιχείο είναι block-level;",
+            options: { A: "<span>", B: "<img>", C: "<div>", D: "<a>" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "19. Ποιο στοιχείο είναι inline;",
+            options: { A: "<p>", B: "<h1>", C: "<div>", D: "<span>" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "20. Ποιο στοιχείο χρησιμοποιείται για σύνδεσμο;",
+            options: { A: "<a href='...'>", B: "<link href='...'>", C: "<url='...'>", D: "<src='...'>" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "21. Ποια είναι η σωστή σύνταξη CSS κανόνα;",
+            options: { A: "selector { property: value; }", B: "selector: { value = property; }", C: "{ selector: property = value }", D: "selector { value: property; }" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "22. Ποιο selector επιλέγει όλα τα στοιχεία με class “intro”;",
+            options: { A: "#intro", B: ".intro", C: "intro", D: "*intro" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "23. Ποιο selector έχει τη μεγαλύτερη προτεραιότητα;",
+            options: { A: "Element", B: "Class", C: "ID", D: "Universal" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "24. Ποιο από τα παρακάτω είναι pseudo-class;",
+            options: { A: "::first-line", B: ":hover", C: "#hover", D: ".hover" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "25. Ποιο από τα παρακάτω είναι pseudo-element;",
+            options: { A: ":hover", B: ":visited", C: "::first-letter", D: "#first-letter" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "26. Ποιο είναι το σωστό για το CSS Box Model;",
+            options: { A: "Margin → Border → Padding → Content", B: "Content → Padding → Border → Margin", C: "Padding → Content → Border → Margin", D: "Content → Border → Padding → Margin" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "27. Ποια είναι η λειτουργία του border-radius;",
+            options: { A: "Ορίζει το χρώμα του περιγράμματος", B: "Δημιουργεί στρογγυλεμένες γωνίες", C: "Ορίζει το πλάτος του περιγράμματος", D: "Δημιουργεί σκιά" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "28. Ποια είναι η λειτουργία του position: fixed;",
+            options: { A: "Το στοιχείο κινείται με το scroll", B: "Το στοιχείο παραμένει σταθερό στην οθόνη", C: "Το στοιχείο εξαφανίζεται", D: "Το στοιχείο γίνεται inline" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "29. Ποιο από τα παρακάτω είναι CSS attribute selector;",
+            options: { A: "div[attr]", B: "div.attr", C: "div#attr", D: "div::attr" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 2",
+            q: "30. Ποια είναι η λειτουργία του :nth-child(n);",
+            options: { A: "Eπιλέγει το πρώτο παιδί", B: "Επιλέγει το τελευταίο παιδί", C: "Επιλέγει το n-οστό παιδί", D: "Επιλέγει όλα τα παιδιά" },
+            correct: "C"
+        },
+
+        // ΚΕΦΑΛΑΙΟ 3
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "1. Ποιο είναι το προεπιλεγμένο port για HTTP;",
+            options: { A: "21", B: "25", C: "80", D: "443" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "2. Ποιο από τα παρακάτω είναι μέρος ενός URL;",
+            options: { A: "Protocol, Host, Path, Query, Fragment", B: "IP, MAC, DNS, TCP", C: "HTML, CSS, JS", D: "GET, POST, PUT" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "3. Ποιο status code σημαίνει επιτυχία σε HTTP;",
+            options: { A: "404", B: "500", C: "200", D: "302" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "4. Ποιο είναι το format ενός MIME τύπου;",
+            options: { A: "host:port", B: "name=value", C: "primary-type/subtype", D: "protocol://host" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "5. Ποια είναι η προεπιλεγμένη διεύθυνση για τοπική πρόσβαση στον Tomcat;",
+            options: { A: "http://localhost:80", B: "http://localhost:3000", C: "http://localhost:8080", D: "http://127.0.0.1:8000" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "6. Σε ποιον φάκελο του Tomcat τοποθετούνται οι εφαρμογές;",
+            options: { A: "/conf", B: "/bin", C: "/webapps", D: "/logs" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "7. Ποιο αρχείο ρυθμίσεων είναι βασικό στον Tomcat;",
+            options: { A: "config.xml", B: "tomcat.conf", C: "server.xml", D: "web.xml" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "8. Ποια μέθοδος στέλνει δεδομένα στο URL;",
+            options: { A: "POST", B: "GET", C: "PUT", D: "DELETE" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "9. Ποιο attribute καθορίζει τη σελίδα που θα λάβει τα δεδομένα της φόρμας;",
+            options: { A: "method", B: "action", C: "enctype", D: "target" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "10. Ποιο στοιχείο χρησιμοποιείται για πολλαπλές γραμμές κειμένου;",
+            options: { A: "<input type=\"text\">", B: "<textarea>", C: "<input type=\"password\">", D: "<textblock>" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "11. Ποιο στοιχείο επιτρέπει επιλογή μόνο μίας τιμής;",
+            options: { A: "Checkbox", B: "Radio", C: "Select multiple", D: "Textarea" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "12. Ποιο attribute χρησιμοποιείται για να απαιτείται συμπλήρωση πεδίου;",
+            options: { A: "required", B: "readonly", C: "disabled", D: "checked" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "13. Ποιο attribute χρησιμοποιείται για να εμφανιστεί υπόδειξη σε πεδίο;",
+            options: { A: "value", B: "placeholder", C: "label", D: "title" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "14. Ποιο attribute χρησιμοποιείται για να επιτρέψει επιλογή αρχείου;",
+            options: { A: "type=\"text\"", B: "type=\"file\"", C: "type=\"upload\"", D: "type=\"image\"" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "15. Ποιο selector επιλέγει όλα τα στοιχεία με class “main”;",
+            options: { A: "#main", B: ".main", C: "main", D: "*main" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "16. Ποιο από τα παρακάτω είναι pseudo-element;",
+            options: { A: ":hover", B: "::first-line", C: "#first-line", D: ".first-line" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "17. Ποιο από τα παρακάτω είναι relational selector;",
+            options: { A: "E > F", B: "E::F", C: "E#F", D: "E.F" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "18. Ποια είναι η λειτουργία του float;",
+            options: { A: "Κεντράρει το στοιχείο", B: "Τοποθετεί το στοιχείο αριστερά ή δεξιά", C: "Κρύβει το στοιχείο", D: "Μετατρέπει το στοιχείο σε inline" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "19. Ποια είναι η διαφορά μεταξύ position: relative και absolute;",
+            options: { A: "Το relative αγνοεί το flow", B: "Το absolute τοποθετείται σε σχέση με τον πρόγονο", C: "Το relative είναι default", D: "Το absolute δεν υποστηρίζεται" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "20. Ποια είναι η προεπιλεγμένη τιμή μιας μη αρχικοποιημένης μεταβλητής;",
+            options: { A: "null", B: "0", C: "undefined", D: "false" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "21. Ποια είναι η διαφορά μεταξύ == και ===;",
+            options: { A: "Δεν υπάρχει διαφορά", B: "Το == συγκρίνει τύπο και τιμή", C: "Το === συγκρίνει μόνο τιμή", D: "Το === συγκρίνει τύπο και τιμή" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "22. Ποιο keyword δηλώνει μεταβλητή με block scope;",
+            options: { A: "var", B: "let", C: "const", D: "Β και Γ" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "23. Ποια είναι η λειτουργία του typeof operator;",
+            options: { A: "Δημιουργεί μεταβλητή", B: "Επιστρέφει τον τύπο μιας τιμής", C: "Εκτελεί συνάρτηση", D: "Δημιουργεί αντικείμενο" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "24. Ποιο από τα παρακάτω δηλώνει arrow function;",
+            options: { A: "function() {}", B: "=> {}", C: "func -> {}", D: "lambda {}" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 3",
+            q: "25. Ποιο από τα παρακάτω είναι έγκυρη δήλωση πίνακα;",
+            options: { A: "let arr = [1, 2, 3];", B: "let arr = {1, 2, 3};", C: "let arr = (1, 2, 3);", D: "let arr = <1, 2, 3>;" },
+            correct: "A"
+        },
+
+        // ΚΕΦΑΛΑΙΟ 4
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "1. Ποια είναι η προεπιλεγμένη διεύθυνση πρόσβασης στον Tomcat server;",
+            options: { A: "http://localhost:80", B: "http://localhost:3000", C: "http://localhost:8080", D: "http://127.0.0.1:8000" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "2. Σε ποιον φάκελο του Tomcat τοποθετούνται οι εφαρμογές;",
+            options: { A: "/conf", B: "/bin", C: "/webapps", D: "/logs" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "3. Ποιο attribute καθορίζει πού αποστέλλονται τα δεδομένα της φόρμας;",
+            options: { A: "method", B: "enctype", C: "action", D: "target" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "4. Ποιο input type χρησιμοποιείται για επιλογή αρχείου;",
+            options: { A: "file", B: "upload", C: "image", D: "select" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "5. Ποιο στοιχείο HTML χρησιμοποιείται για να ομαδοποιήσει πεδία φόρμας με τίτλο;",
+            options: { A: "<group>", B: "<fieldset> και <legend>", C: "<section>", D: "<div>" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "6. Ποιο attribute χρησιμοποιείται για να απαιτείται συμπλήρωση πεδίου;",
+            options: { A: "required", B: "readonly", C: "disabled", D: "checked" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "7. Ποιο στοιχείο HTML χρησιμοποιείται για να εμφανίσει ποσοστό προόδου;",
+            options: { A: "<meter>", B: "<progress>", C: "<range>", D: "<bar>" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "8. Ποιο selector επιλέγει όλα τα στοιχεία με id 'main'?",
+            options: { A: ".main", B: "main", C: "#main", D: "*main" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "9. Ποιο από τα παρακάτω είναι pseudo-element;",
+            options: { A: ":hover", B: "::first-line", C: "#first-line", D: ".first-line" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "10. Ποια είναι η λειτουργία της ιδιότητας z-index;",
+            options: { A: "Ορίζει το μέγεθος του στοιχείου", B: "Ορίζει τη στοίχιση του κειμένου", C: "Ορίζει τη σειρά εμφάνισης στοιχείων", D: "Ορίζει το χρώμα του περιγράμματος" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "11. Ποια είναι η προεπιλεγμένη τιμή της position;",
+            options: { A: "relative", B: "absolute", C: "static", D: "fixed" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "12. Ποια τιμή της overflow εμφανίζει scrollbars;",
+            options: { A: "visible", B: "hidden", C: "scroll", D: "none" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "13. Ποια είναι η προεπιλεγμένη τιμή μιας μη αρχικοποιημένης μεταβλητής;",
+            options: { A: "null", B: "0", C: "undefined", D: "false" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "14. Ποια είναι η διαφορά μεταξύ == και ===;",
+            options: { A: "Δεν υπάρχει διαφορά", B: "Το == συγκρίνει τύπο και τιμή", C: "Το === συγκρίνει μόνο τιμή", D: "Το === συγκρίνει τύπο και τιμή" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "15. Ποιο από τα παρακάτω δηλώνει arrow function;",
+            options: { A: "function() {}", B: "=> {}", C: "func -> {}", D: "lambda {}" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "16. Ποιο από τα παρακάτω είναι έγκυρη δήλωση πίνακα;",
+            options: { A: "let arr = [1, 2, 3];", B: "let arr = {1, 2, 3};", C: "let arr = (1, 2, 3);", D: "let arr = <1, 2, 3>;" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "17. Ποια μέθοδος επιλέγει το πρώτο στοιχείο που ταιριάζει με CSS selector;",
+            options: { A: "getElementById()", B: "querySelector()", C: "getElementsByClassName()", D: "querySelectorAll()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "18. Ποια μέθοδος προσθέτει event listener σε στοιχείο;",
+            options: { A: "addEvent()", B: "onEvent()", C: "addEventListener()", D: "registerEvent()" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "19. Ποια μέθοδος ακυρώνει την προεπιλεγμένη ενέργεια ενός event;",
+            options: { A: "stop()", B: "cancel()", C: "preventDefault()", D: "block()" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "20. Ποια μέθοδος ακυρώνει τη διάδοση ενός event;",
+            options: { A: "stopPropagation()", B: "cancelEvent()", C: "preventDefault()", D: "blockPropagation()" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "21. Ποια ιδιότητα επιστρέφει το HTML περιεχόμενο ενός στοιχείου;",
+            options: { A: "textContent", B: "innerHTML", C: "value", D: "outerText" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "22. Ποια μέθοδος δημιουργεί νέο HTML στοιχείο;",
+            options: { A: "createNode()", B: "createElement()", C: "newElement()", D: "appendElement()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 4",
+            q: "23. Ποια μέθοδος προσθέτει στοιχείο στο τέλος ενός γονέα;",
+            options: { A: "append()", B: "prepend()", C: "insert()", D: "add()" },
+            correct: "A"
+        },
+
+        // ΚΕΦΑΛΑΙΟ 5
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "1. Ποιο από τα παρακάτω είναι παράδειγμα δυναμικού πόρου;",
+            options: { A: "HTML αρχείο", B: "CSS αρχείο", C: "Java Servlet", D: "PNG εικόνα" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "2. Ποια είναι η διαφορά μεταξύ GET και POST μεθόδου σε HTML φόρμα;",
+            options: { A: "Το GET στέλνει δεδομένα στο body", B: "Το POST στέλνει δεδομένα στο URL", C: "Το GET στέλνει δεδομένα στο URL, το POST στο body", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "3. Ποια μηχανή JavaScript χρησιμοποιεί ο Chrome;",
+            options: { A: "Rhino", B: "Nashorn", C: "V8", D: "Chakra" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "4. Ποια μέθοδος JavaScript επιλέγει το πρώτο στοιχείο που ταιριάζει με CSS selector;",
+            options: { A: "getElementById()", B: "querySelector()", C: "getElementsByClassName()", D: "querySelectorAll()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "5. Ποια μέθοδος δημιουργεί νέο HTML στοιχείο μέσω JavaScript;",
+            options: { A: "createNode()", B: "createElement()", C: "newElement()", D: "appendElement()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "6. Ποια είναι η βασική μέθοδος εκκίνησης Java Desktop εφαρμογής;",
+            options: { A: "init()", B: "main()", C: "start()", D: "run()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "7. Ποια από τις παρακάτω λέξεις είναι Java keyword;",
+            options: { A: "define", B: "function", C: "interface", D: "lambda" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "8. Ποια είναι η διαφορά μεταξύ interface και abstract class;",
+            options: { A: "Το interface έχει υλοποιήσεις", B: "Το abstract class δεν έχει καθόλου μεθόδους", C: "Το interface δεν έχει σώματα μεθόδων", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "9. Ποια μέθοδος χρησιμοποιείται για να μετατρέψει ένα αντικείμενο σε String;",
+            options: { A: "toText()", B: "toString()", C: "stringify()", D: "asString()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "10. Ποιο αρχείο περιγράφει τη δομή και τις ρυθμίσεις μιας Java Web εφαρμογής;",
+            options: { A: "web.xml", B: "pom.xml", C: "build.gradle", D: "settings.json" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "11. Ποιο αρχείο περιέχει τις Java κλάσεις σε WAR αρχείο;",
+            options: { A: "/src", B: "/classes", C: "/lib", D: "/bin" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "12. Ποιο είναι το όνομα του φακέλου στον Tomcat όπου τοποθετούνται οι εφαρμογές;",
+            options: { A: "/apps", B: "/webapps", C: "/deploy", D: "/htdocs" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "13. Ποια μέθοδος καλείται όταν φορτώνεται για πρώτη φορά ένα Servlet;",
+            options: { A: "start()", B: "run()", C: "init()", D: "main()" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "14. Ποια μέθοδος καλείται για κάθε HTTP αίτημα σε Servlet;",
+            options: { A: "init()", B: "service()", C: "execute()", D: "handle()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "15. Ποια μέθοδος χρησιμοποιείται για να γράψει το Servlet HTML απάντηση;",
+            options: { A: "getWriter()", B: "writeHTML()", C: "sendResponse()", D: "printHTML()" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "16. Ποιο interface επιτρέπει την ανάγνωση παραμέτρων από HTTP αίτημα;",
+            options: { A: "HttpServletResponse", B: "ServletOutputStream", C: "HttpServletRequest", D: "ServletReader" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "17. Ποιο στοιχείο JSP χρησιμοποιείται για εμφάνιση Java έκφρασης;",
+            options: { A: "<%! ... %>", B: "<% ... %>", C: "<%= ... %>", D: "<%@ ... %>" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "18. Ποιο από τα παρακάτω είναι implicit object σε JSP;",
+            options: { A: "console", B: "out", C: "print", D: "writer" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "19. Ποια είναι η λειτουργία του include directive σε JSP;",
+            options: { A: "Εκτελεί JavaScript", B: "Εισάγει CSS", C: "Εισάγει περιεχόμενο άλλου αρχείου", D: "Δημιουργεί νέο JSP" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "20. Ποια είναι η διαφορά μεταξύ JSP και Servlet;",
+            options: { A: "Το JSP είναι πιο γρήγορο", B: "Το Servlet είναι πιο εύκολο", C: "Το JSP μετατρέπεται σε Servlet", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "21. Ποιο μοντέλο αρχιτεκτονικής είναι γνωστό ως MVC;",
+            options: { A: "Model 1", B: "Model 2", C: "Model 3", D: "Model-Only" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 5",
+            q: "22. Ποιο στοιχείο του MVC χειρίζεται την επιχειρησιακή λογική;",
+            options: { A: "Model", B: "View", C: "Controller", D: "Servlet" },
+            correct: "A"
+        },
+
+        // ΚΕΦΑΛΑΙΟ 6
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "1. Ποιος είναι ο ρόλος του full-stack developer;",
+            options: { A: "Μόνο backend", B: "Μόνο frontend", C: "Και frontend και backend", D: "Μόνο σχεδίαση UI" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "2. Ποιο από τα παρακάτω δεν είναι client-side τεχνολογία;",
+            options: { A: "HTML", B: "CSS", C: "JavaScript", D: "Java Servlet" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "3. Ποια μέθοδος Servlet καλείται για κάθε HTTP αίτημα;",
+            options: { A: "init()", B: "service()", C: "main()", D: "run()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "4. Ποιο από τα παρακάτω είναι implicit object σε JSP;",
+            options: { A: "console", B: "out", C: "print", D: "writer" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "5. Ποιο στοιχείο JSP περιέχει Java κώδικα;",
+            options: { A: "<%@ ... %>", B: "<%! ... %>", C: "<% ... %>", D: "&lt;script&gt; ... &lt;/script&gt;" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "6. Τι είναι το WAR αρχείο;",
+            options: { A: "Εκτελέσιμο αρχείο Java", B: "Αρχείο βάσης δεδομένων", C: "Αρχείο ZIP με δομή Web εφαρμογής", D: "Αρχείο CSS" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "7. Ποιο εργαλείο χρησιμοποιείται για δημιουργία WAR μέσω XML αρχείου;",
+            options: { A: "Gradle", B: "Maven", C: "Apache Ant", D: "NetBeans" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "8. Ποιο είναι το όνομα του αρχείου ρυθμίσεων του Ant;",
+            options: { A: "pom.xml", B: "build.gradle", C: "build.xml", D: "web.xml" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "9. Πού αποθηκεύονται τα cookies;",
+            options: { A: "Στον server", B: "Στον client", C: "Στη βάση δεδομένων", D: "Στο WAR αρχείο" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "10. Ποιο από τα παρακάτω είναι χαρακτηριστικό των session cookies;",
+            options: { A: "Αποθηκεύονται στο δίσκο", B: "Επιβιώνουν μετά το κλείσιμο του browser", C: "Διαγράφονται με το κλείσιμο του browser", D: "Είναι πάντα κρυπτογραφημένα" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "11. Ποια είναι η κύρια διαφορά μεταξύ cookies και sessions;",
+            options: { A: "Τα cookies είναι πιο ασφαλή", B: "Τα sessions αποθηκεύονται στον client", C: "Τα cookies αποθηκεύονται στον server", D: "Τα sessions αποθηκεύονται στον server" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "12. Τι είναι το JDBC;",
+            options: { A: "Γλώσσα προγραμματισμού", B: "Πρωτόκολλο δικτύου", C: "API για σύνδεση Java με βάσεις δεδομένων", D: "IDE για Java" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "13. Ποιος τύπος JDBC driver είναι πλήρως γραμμένος σε Java;",
+            options: { A: "Type 1", B: "Type 2", C: "Type 3", D: "Type 4" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "14. Ποια μέθοδος χρησιμοποιείται για να εκτελέσουμε SELECT SQL με Statement;",
+            options: { A: "executeUpdate()", B: "execute()", C: "executeQuery()", D: "runQuery()" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "15. Ποια μέθοδος χρησιμοποιείται για να εκτελέσουμε INSERT SQL με PreparedStatement;",
+            options: { A: "execute()", B: "executeQuery()", C: "executeUpdate()", D: "runUpdate()" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "16. Ποια μέθοδος μετακινεί τον cursor στο επόμενο row του ResultSet;",
+            options: { A: "next()", B: "move()", C: "advance()", D: "step()" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "17. Ποια μέθοδος χρησιμοποιείται για να φορτωθεί ο JDBC driver;",
+            options: { A: "Driver.load()", B: "Class.forName()", C: "DriverManager.init()", D: "connect()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "18. Ποια μέθοδος δημιουργεί σύνδεση με βάση δεδομένων;",
+            options: { A: "Connection.open()", B: "Driver.connect()", C: "DriverManager.getConnection()", D: "JDBC.connect()" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "19. Ποια είναι η λειτουργία του connection pool;",
+            options: { A: "Δημιουργεί νέες βάσεις δεδομένων", B: "Αποθηκεύει SQL queries", C: "Επαναχρησιμοποιεί συνδέσεις με τη βάση", D: "Εκτελεί triggers" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 6",
+            q: "20. Ποια εντολή χρησιμοποιείται για να απενεργοποιηθεί το auto-commit;",
+            options: { A: "conn.setAutoCommit(false);", B: "conn.disableAutoCommit();", C: "conn.commit(false);", D: "conn.rollback();" },
+            correct: "A"
+        },
+
+        // ΚΕΦΑΛΑΙΟ 7
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "1. Ποια είναι η βασική ιδιότητα του HTTP πρωτοκόλλου;",
+            options: { A: "Είναι ασφαλές", B: "Είναι stateful", C: "Είναι stateless", D: "Είναι peer-to-peer" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "2. Ποια είναι η λειτουργία των cookies;",
+            options: { A: "Εκτελούν JavaScript", B: "Αποθηκεύουν δεδομένα στον server", C: "Επιτρέπουν την αναγνώριση χρήστη μεταξύ HTTP αιτημάτων", D: "Ελέγχουν την ταχύτητα σύνδεσης" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "3. Ποια είναι η διαφορά μεταξύ session και cookie;",
+            options: { A: "Τα sessions αποθηκεύονται στον client", B: "Τα cookies αποθηκεύονται στον server", C: "Τα sessions αποθηκεύονται στον server", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "4. Ποιο από τα παρακάτω είναι persistent cookie;",
+            options: { A: "Διαγράφεται με το κλείσιμο του browser", B: "Αποθηκεύεται στη μνήμη", C: "Έχει ημερομηνία λήξης", D: "Είναι πάντα κρυπτογραφημένο" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "5. Ποια είναι η λειτουργία του Set-Cookie header;",
+            options: { A: "Διαγράφει cookies", B: "Δημιουργεί session", C: "Ορίζει cookie στον client", D: "Εκτελεί JavaScript" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "6. Ποια μέθοδος Servlet καλείται για κάθε HTTP αίτημα;",
+            options: { A: "init()", B: "service()", C: "main()", D: "run()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "7. Ποιο αντικείμενο χρησιμοποιείται για να γράψουμε HTML απάντηση σε Servlet;",
+            options: { A: "HttpServletRequest", B: "HttpServletResponse", C: "PrintWriter", D: "ServletOutputStream" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "8. Ποιο από τα παρακάτω είναι implicit object σε JSP;",
+            options: { A: "console", B: "out", C: "print", D: "writer" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "9. Ποιο στοιχείο JSP περιέχει Java κώδικα;",
+            options: { A: "<%@ ... %>", B: "<%! ... %>", C: "<% ... %>", D: "&lt;script&gt; ... &lt;/script&gt;" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "10. Ποια μέθοδος μετακινεί τον cursor στο επόμενο row του ResultSet;",
+            options: { A: "next()", B: "move()", C: "advance()", D: "step()" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "11. Ποια μέθοδος χρησιμοποιείται για να εκτελέσουμε SELECT SQL με Statement;",
+            options: { A: "executeUpdate()", B: "execute()", C: "executeQuery()", D: "runQuery()" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "12. Ποια μέθοδος χρησιμοποιείται για να εκτελέσουμε INSERT SQL με PreparedStatement;",
+            options: { A: "execute()", B: "executeQuery()", C: "executeUpdate()", D: "runUpdate()" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "13. Ποια είναι η λειτουργία του Class.forName(...);",
+            options: { A: "Εκτελεί SQL", B: "Δημιουργεί σύνδεση", C: "Φορτώνει JDBC driver", D: "Κλείνει σύνδεση" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "14. Ποιο από τα παρακάτω χαρακτηρίζει τα RESTful Web Services;",
+            options: { A: "Χρησιμοποιούν XML", B: "Χρησιμοποιούν SOAP", C: "Χρησιμοποιούν JSON", D: "Δεν χρησιμοποιούν HTTP" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "15. Ποιο από τα παρακάτω είναι χαρακτηριστικό του SOAP;",
+            options: { A: "Χρησιμοποιεί JSON", B: "Είναι RESTful", C: "Χρησιμοποιεί XML", D: "Δεν χρησιμοποιεί HTTP" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "16. Ποιο είναι το προεπιλεγμένο encoding για HTML φόρμες;",
+            options: { A: "multipart/form-data", B: "application/json", C: "application/xml", D: "application/x-www-form-urlencoded" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "17. Ποιο από τα παρακάτω είναι έγκυρο στοιχείο XML;",
+            options: { A: "<book>", B: "<book/>", C: "<book></book>", D: "Όλα τα παραπάνω" },
+            correct: "D"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "18. Ποιο από τα παρακάτω δεν επιτρέπεται σε όνομα XML στοιχείου;",
+            options: { A: "Κενά", B: "Παύλες", C: "Τελείες", D: "Ψηφία" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "19. Ποια είναι η διαφορά μεταξύ well-formed και valid XML;",
+            options: { A: "Το well-formed είναι πάντα valid", B: "Το valid XML συμμορφώνεται με DTD ή XSD", C: "Το valid XML δεν χρειάζεται end-tags", D: "Δεν υπάρχει διαφορά" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "20. Ποιο από τα παρακάτω είναι σωστό για XML attributes;",
+            options: { A: "Δεν χρειάζονται τιμή", B: "Η τιμή πρέπει να είναι σε εισαγωγικά", C: "Μπορούν να περιέχουν tags", D: "Είναι πάντα αριθμοί" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "21. Ποια είναι η λειτουργία του DTD;",
+            options: { A: "Εκτελεί JavaScript", B: "Ορίζει τη δομή XML εγγράφου", C: "Μετατρέπει XML σε JSON", D: "Δημιουργεί HTML" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "22. Ποια είναι η διαφορά DTD και XSD;",
+            options: { A: "Το DTD υποστηρίζει τύπους δεδομένων", B: "Το XSD υποστηρίζει τύπους δεδομένων", C: "Το DTD είναι πιο σύγχρονο", D: "Δεν υπάρχει διαφορά" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "23. Ποιο από τα παρακάτω είναι έγκυρο JSON αντικείμενο;",
+            options: { A: "{ \"name\": \"John\" }", B: "{ name: \"John\" }", C: "{ 'name': 'John' }", D: "{ name = \"John\" }" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "24. Ποιο από τα παρακάτω είναι έγκυρο JSON array;",
+            options: { A: "{ \"names\": \"John, Mary\" }", B: "[ \"John\", \"Mary\" ]", C: "( \"John\", \"Mary\" )", D: "{ \"John\", \"Mary\" }" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "25. Ποια είναι η διαφορά μεταξύ JSON και JavaScript Object;",
+            options: { A: "Το JSON υποστηρίζει functions", B: "Το JSON δεν είναι case-sensitive", C: "Το JSON απαιτεί διπλά εισαγωγικά στα keys", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "26. Ποιο από τα παρακάτω είναι χαρακτηριστικό του YAML;",
+            options: { A: "Χρησιμοποιεί αγκύλες", B: "Δεν υποστηρίζει σχόλια", C: "Είναι ευαίσθητο σε κενά", D: "Δεν υποστηρίζει λίστες" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "27. Ποιο από τα παρακάτω είναι σωστό YAML list;",
+            options: { A: "list: [a, b, c]", B: "list: - a - b - c", C: "list:\n - a\n - b\n - c", D: "list = a, b, c" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "28. Ποιο από τα παρακάτω είναι πιο αναγνώσιμο από άνθρωπο;",
+            options: { A: "XML", B: "JSON", C: "YAML", D: "Όλα εξίσου" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 7",
+            q: "29. Ποιο από τα παρακάτω υποστηρίζει comments;",
+            options: { A: "XML", B: "YAML", C: "Και τα δύο", D: "Κανένα" },
+            correct: "C"
+        },
+
+        // ΚΕΦΑΛΑΙΟ 8
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "1. Ποιο είναι το προεπιλεγμένο encoding για HTML φόρμες με μέθοδο POST;",
+            options: { A: "application/json", B: "multipart/form-data", C: "application/x-www-form-urlencoded", D: "text/plain" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "2. Ποιο MIME type αντιστοιχεί σε αρχείο JSON;",
+            options: { A: "text/json", B: "application/json", C: "text/javascript", D: "application/xml" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "3. Ποια είναι η διαφορά μεταξύ GET και POST αιτήματος;",
+            options: { A: "Το GET στέλνει δεδομένα στο body", B: "Το POST στέλνει δεδομένα στο URL", C: "Το GET στέλνει δεδομένα στο URL, το POST στο body", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "4. Ποιο annotation χρησιμοποιείται για να δηλώσουμε ένα Servlet;",
+            options: { A: "@ServletPath", B: "@WebServlet", C: "@HttpServlet", D: "@ServletMapping" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "5. Ποιο αρχείο περιέχει τις Java κλάσεις σε WAR αρχείο;",
+            options: { A: "/src", B: "/classes", C: "/lib", D: "/bin" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "6. Ποια είναι η επέκταση αρχείου για JSP σελίδες;",
+            options: { A: ".html", B: ".jsp", C: ".java", D: ".xml" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "7. Ποια μέθοδος JDBC χρησιμοποιείται για SELECT SQL;",
+            options: { A: "executeUpdate()", B: "executeQuery()", C: "runQuery()", D: "select()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "8. Ποια είναι η έξοδος μιας hash function;",
+            options: { A: "Κρυπτογραφημένο κείμενο", B: "Τυχαίος αριθμός", C: "Σταθερού μήκους τιμή", D: "Κωδικός πρόσβασης" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "9. Ποια ιδιότητα δεν είναι χαρακτηριστικό μιας κρυπτογραφικής hash function;",
+            options: { A: "Preimage resistance", B: "Collision resistance", C: "Αναστρεψιμότητα", D: "Avalanche effect" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "10. Ποια hash function χρησιμοποιήθηκε στο Lab 3;",
+            options: { A: "MD5", B: "SHA-1", C: "SHA-256", D: "CRC32" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "11. Ποια είναι η μορφή μηνυμάτων στο SOAP;",
+            options: { A: "JSON", B: "HTML", C: "XML", D: "YAML" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "12. Ποιο αρχείο περιγράφει ένα SOAP Web Service;",
+            options: { A: "web.xml", B: "schema.json", C: "WSDL", D: "UDDI" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "13. Ποιο πρότυπο χρησιμοποιείται για ανακάλυψη Web Services;",
+            options: { A: "WSDL", B: "UDDI", C: "SOAP", D: "REST" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "14. Ποιο HTTP verb αντιστοιχεί σε CRUD 'Create'?",
+            options: { A: "GET", B: "POST", C: "PUT", D: "DELETE" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "15. Ποιο MIME type χρησιμοποιείται συχνά σε RESTful Web Services;",
+            options: { A: "application/xml", B: "application/json", C: "text/html", D: "text/plain" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "16. Ποιο από τα παρακάτω κάνει ένα XML έγγραφο valid;",
+            options: { A: "Να είναι well-formed", B: "Να έχει DTD ή XSD", C: "Να έχει σχόλια", D: "Να έχει μόνο tags" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "17. Ποιο από τα παρακάτω είναι έγκυρο JSON αντικείμενο;",
+            options: { A: "{ name: \"John\" }", B: "{ \"name\": \"John\" }", C: "{ 'name': 'John' }", D: "{ name = \"John\" }" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "18. Ποια είναι η διαφορά μεταξύ JSON και JSON Schema;",
+            options: { A: "Το JSON Schema είναι XML", B: "Το JSON Schema περιγράφει τη δομή JSON", C: "Το JSON Schema είναι μόνο για SOAP", D: "Δεν υπάρχει διαφορά" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "19. Τι επιστρέφει η fetch() συνάρτηση;",
+            options: { A: "String", B: "Object", C: "Promise", D: "Boolean" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "20. Ποια μέθοδος χρησιμοποιείται για να χειριστούμε σφάλματα σε Promise;",
+            options: { A: "then()", B: "catch()", C: "finally()", D: "error()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "21. Ποια μέθοδος εκτελείται μετά από κάθε Promise, ανεξαρτήτως αποτελέσματος;",
+            options: { A: "then()", B: "catch()", C: "finally()", D: "done()" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 8",
+            q: "22. Ποια είναι η λειτουργία της setTimeout();",
+            options: { A: "Εκτελεί κώδικα επαναλαμβανόμενα", B: "Εκτελεί κώδικα μετά από καθυστέρηση", C: "Εκτελεί κώδικα άμεσα", D: "Εκτελεί κώδικα σε άλλο thread" },
+            correct: "B"
+        },
+
+        // ΚΕΦΑΛΑΙΟ 9
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "1. Ποιος είναι ο στόχος του project της διάλεξης;",
+            options: { A: "Δημιουργία desktop εφαρμογής", B: "Ανάπτυξη REST API", C: "Δημιουργία Web εφαρμογής για ανταλλαγή ιδεών", D: "Ανάπτυξη mobile εφαρμογής" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "2. Ποιο εργαλείο χρησιμοποιείται για διαχείριση βάσεων δεδομένων;",
+            options: { A: "Apache Tomcat", B: "Eclipse", C: "XAMPP", D: "VS Code" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "3. Ποιο MIME type αντιστοιχεί σε JSON;",
+            options: { A: "text/json", B: "application/json", C: "text/javascript", D: "application/xml" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "4. Ποια είναι η διαφορά μεταξύ GET και POST αιτήματος;",
+            options: { A: "Το GET στέλνει δεδομένα στο body", B: "Το POST στέλνει δεδομένα στο URL", C: "Το GET στέλνει δεδομένα στο URL, το POST στο body", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "5. Ποιο annotation χρησιμοποιείται για να δηλώσουμε ένα Servlet;",
+            options: { A: "@ServletPath", B: "@WebServlet", C: "@HttpServlet", D: "@ServletMapping" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "6. Ποια μέθοδος JDBC χρησιμοποιείται για SELECT SQL;",
+            options: { A: "executeUpdate()", B: "executeQuery()", C: "runQuery()", D: "select()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "7. Ποια είναι η λειτουργία του ResultSet στην JDBC;",
+            options: { A: "Εκτελεί SQL", B: "Αποθηκεύει HTML", C: "Περιέχει τα αποτελέσματα SELECT", D: "Δημιουργεί σύνδεση" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "8. Ποια είναι η χρήση της Util.java;",
+            options: { A: "Εκτελεί HTML", B: "Υπολογίζει hash και βοηθά σε JSON", C: "Δημιουργεί CSS", D: "Εκτελεί SQL" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "9. Ποιο HTTP verb αντιστοιχεί σε CRUD 'Create'?",
+            options: { A: "GET", B: "POST", C: "PUT", D: "DELETE" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "10. Ποιο είναι το προεπιλεγμένο format ανταλλαγής δεδομένων σε REST;",
+            options: { A: "XML", B: "HTML", C: "JSON", D: "YAML" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "11. Ποιο από τα παρακάτω είναι χαρακτηριστικό του REST;",
+            options: { A: "Χρησιμοποιεί SOAP", B: "Χρησιμοποιεί XML μόνο", C: "Χρησιμοποιεί HTTP verbs", D: "Δεν έχει URI" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "12. Ποια είναι η λειτουργία του @PathParam;",
+            options: { A: "Δαβάζει JSON", B: "Δηλώνει MIME type", C: "Εξάγει παράμετρο από URI", D: "Δημιουργεί session" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "13. Ποιο από τα παρακάτω είναι έγκυρο JSON αντικείμενο;",
+            options: { A: "{ name: \"John\" }", B: "{ \"name\": \"John\" }", C: "{ 'name': 'John' }", D: "{ name = \"John\" }" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "14. Ποια είναι η λειτουργία της Gson βιβλιοθήκης;",
+            options: { A: "Μετατρέπει HTML σε JSON", B: "Μετατρέπει Java Objects σε JSON και αντίστροφα", C: "Εκτελεί SQL", D: "Δημιουργεί CSS" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "15. Ποια είναι η διαφορά μεταξύ JSON και JSON Schema;",
+            options: { A: "Το JSON Schema είναι XML", B: "Το JSON Schema περιγράφει τη δομή JSON", C: "Το JSON Schema είναι μόνο για SOAP", D: "Δεν υπάρχει διαφορά" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "16. Τι επιστρέφει η fetch() συνάρτηση;",
+            options: { A: "String", B: "Object", C: "Promise", D: "Boolean" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "17. Ποια μέθοδος χρησιμοποιείται για να χειριστούμε σφάλματα σε Promise;",
+            options: { A: "then()", B: "catch()", C: "finally()", D: "error()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "18. Ποια είναι η λειτουργία της async λέξης-κλειδί;",
+            options: { A: "Δηλώνει ότι η συνάρτηση επιστρέφει Promise", B: "Δηλώνει ότι η συνάρτηση είναι συγχρονισμένη", C: "Δηλώνει ότι η συνάρτηση είναι static", D: "Δηλώνει ότι η συνάρτηση είναι private" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "19. Ποιο annotation δηλώνει ότι η μέθοδος χειρίζεται GET αιτήματα;",
+            options: { A: "@GET", B: "@Path", C: "@Produces", D: "@QueryParam" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 9",
+            q: "20. Ποιο εργαλείο χρησιμοποιείται για τεκμηρίωση REST APIs με OpenAPI;",
+            options: { A: "Postman", B: "Swagger", C: "JDBC", D: "XAMPP" },
+            correct: "B"
+        },
+
+        // ΚΕΦΑΛΑΙΟ 10
+        {
+            chapter: "Κεφάλαια 10",
+            q: "1. Ποια είναι η βασική λειτουργία του Controller στο MVC;",
+            options: { A: "Εμφανίζει δεδομένα", B: "Εκτελεί SQL", C: "Διαχειρίζεται εντολές και τις προωθεί", D: "Δημιουργεί HTML" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "2. Ποια είναι η διαφορά μεταξύ redirection και forwarding;",
+            options: { A: "Το redirection αλλάζει το URL", B: "Το forwarding αλλάζει το URL", C: "Το redirection γίνεται στον server", D: "Δεν υπάρχει διαφορά" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "3. Ποια μέθοδος χρησιμοποιείται για redirection σε Servlet;",
+            options: { A: "forward()", B: "sendRedirect()", C: "dispatch()", D: "redirectTo()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "4. Ποια μέθοδος χρησιμοποιείται για forwarding σε Servlet;",
+            options: { A: "sendRedirect()", B: "forward()", C: "redirect()", D: "transfer()" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "5. Ποια είναι η έξοδος μιας hash function;",
+            options: { A: "Κρυπτογραφημένο κείμενο", B: "Τυχαίος αριθμός", C: "Σταθερού μήκους τιμή", D: "Κωδικός πρόσβασης" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "6. Ποια ιδιότητα δεν είναι χαρακτηριστικό μιας κρυπτογραφικής hash function;",
+            options: { A: "Preimage resistance", B: "Collision resistance", C: "Αναστρεψιμότητα", D: "Avalanche effect" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "7. Ποια hash function χρησιμοποιήθηκε στο Lab 3;",
+            options: { A: "MD5", B: "SHA-1", C: "SHA-256", D: "CRC32" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "8. Ποια είναι η βασική διαφορά συμμετρικής και ασύμμετρης κρυπτογράφησης;",
+            options: { A: "Η συμμετρική χρησιμοποιεί δύο κλειδιά", B: "Η ασύμμετρη χρησιμοποιεί ένα κλειδί", C: "Η ασύμμετρη χρησιμοποιεί δύο κλειδιά", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "9. Ποιο είναι το πιο γνωστό αλγόριθμο ασύμμετρης κρυπτογράφησης;",
+            options: { A: "AES", B: "DES", C: "RSA", D: "SHA" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "10. Ποια είναι η προεπιλεγμένη πόρτα για HTTPS;",
+            options: { A: "80", B: "21", C: "443", D: "22" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "11. Ποια είναι η λειτουργία του ψηφιακού πιστοποιητικού;",
+            options: { A: "Εκτελεί SQL", B: "Εαληθεύει την ταυτότητα του server", C: "Δημιουργεί cookies", D: "Εκτελεί JavaScript" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "12. Ποιο στοιχείο δεν περιλαμβάνεται σε ένα ψηφιακό πιστοποιητικό;",
+            options: { A: "Όνομα κατόχου", B: "Ιδιωτικό κλειδί", C: "Δημόσιο κλειδί", D: "Ημερομηνία λήξης" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "13. Τι είναι το SQL Injection;",
+            options: { A: "Τεχνική CSS", B: "Είδος cookie", C: "Επίθεση εισαγωγής κακόβουλου SQL", D: "Μέθοδος κρυπτογράφησης" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "14. Ποια είναι η λειτουργία ενός firewall;",
+            options: { A: "Εκτελεί SQL", B: "Ελέγχει την πρόσβαση σε αρχεία", C: "Φιλτράρει την κυκλοφορία δικτύου", D: "Δημιουργεί cookies" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "15. Ποια είναι η λειτουργία ενός IDS;",
+            options: { A: "Εκτελεί JavaScript", B: "Ανιχνεύει ύποπτη δραστηριότητα", C: "Δημιουργεί HTML", D: "Εκτελεί SQL" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "16. Ποιο framework είναι πρότυπο για την κυβερνοασφάλεια στις ΗΠΑ;",
+            options: { A: "ISO 27001", B: "GDPR", C: "NIST", D: "OWASP" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "17. Τι είναι η authentication;",
+            options: { A: "Έλεγχος ταυτότητας χρήστη", B: "Έλεγχος πρόσβασης", C: "Δημιουργία cookie", D: "Εκτέλεση SQL" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "18. Τι είναι η authorization;",
+            options: { A: "Έλεγχος ταυτότητας", B: "Έλεγχος πρόσβασης σε πόρους", C: "Δημιουργία HTML", D: "Εκτέλεση JavaScript" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "22. Ποια είναι η προεπιλεγμένη μέθοδος για HTML φόρμες;",
+            options: { A: "GET", B: "POST", C: "PUT", D: "DELETE" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "23. Ποιο Content-Type χρησιμοποιείται για HTML φόρμες με POST;",
+            options: { A: "application/json", B: "text/plain", C: "application/x-www-form-urlencoded", D: "multipart/form-data" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαια 10",
+            q: "25. Ποια είναι η βασική λειτουργία του HTTPS;",
+            options: { A: "Εκτελεί SQL", B: "Κρυπτογραφεί HTTP μηνύματα", C: "Δημιουργεί HTML", D: "Εκτελεί JavaScript" },
+            correct: "B"
+        },
+
+        // ΚΕΦΑΛΑΙΟ 11
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "1. Ποια είναι η προεπιλεγμένη πόρτα για HTTPS;",
+            options: { A: "80", B: "443", C: "21", D: "22" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "2. Ποια είναι η βασική λειτουργία του HTTPS;",
+            options: { A: "Εκτελεί SQL", B: "Κρυπτογραφεί HTTP μηνύματα", C: "Δημιουργεί HTML", D: "Εκτελεί JavaScript" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "3. Ποια είναι η διαφορά μεταξύ authentication και authorization;",
+            options: { A: "Το authentication ελέγχει πρόσβαση", B: "Το authorization ελέγχει ταυτότητα", C: "Το authentication ελέγχει ταυτότητα", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "4. Ποια είναι η λειτουργία του CORS;",
+            options: { A: "Εκτελεί SQL", B: "Eπιτρέπει cross-origin αιτήματα", C: "Δημιουργεί cookies", D: "Εκτελεί JavaScript" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "5. Ποια είναι η βασική διαφορά μεταξύ βιβλιοθήκης και framework;",
+            options: { A: "Η βιβλιοθήκη καλεί τον κώδικα της εφαρμογής", B: "Το framework καλεί τον κώδικα της εφαρμογής", C: "Δεν υπάρχει διαφορά", D: "Η βιβλιοθήκη είναι πιο περίπλοκη" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "6. Ποιο από τα παρακάτω είναι JavaScript framework;",
+            options: { A: "jQuery", B: "Angular", C: "Bootstrap", D: "Axios" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "7. Ποια είναι η γλώσσα στην οποία βασίζεται το Angular;",
+            options: { A: "JavaScript", B: "TypeScript", C: "Python", D: "Java" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "8. Ποιο χαρακτηριστικό δεν ανήκει στο Vanilla JavaScript;",
+            options: { A: "Lightweight", B: "Χρήση framework", C: "Χρήση browser API", D: "Καθαρός κώδικας" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "9. Ποια είναι η λειτουργία του JDBC API;",
+            options: { A: "Δημιουργεί HTML", B: "Εκτελεί JavaScript", C: "Eπιτρέπει σύνδεση Java με DB", D: "Δημιουργεί CSS" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "10. Ποιο annotation δηλώνει primary key σε JPA;",
+            options: { A: "@Entity", B: "@Id", C: "@Column", D: "@Table" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "11. Ποιο annotation δηλώνει ότι μια κλάση είναι JPA entity;",
+            options: { A: "@Entity", B: "@Table", C: "@Class", D: "@Model" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "12. Ποιο framework υλοποιεί το JPA;",
+            options: { A: "Angular", B: "Hibernate", C: "Spring Boot", D: "JSP" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "13. Ποια είναι η βασική διαφορά Spring και Spring Boot;",
+            options: { A: "Το Spring Boot είναι πιο περίπλοκο", B: "Το Spring Boot απαιτεί περισσότερη ρύθμιση", C: "Το Spring Boot απλοποιεί τη ρύθμιση", D: "Δεν υπάρχει διαφορά" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "14. Ποια είναι η λειτουργία του Dependency Injection;",
+            options: { A: "Εκτελεί SQL", B: "Εισαγει εξαρτήσεις σε αντικείμενα", C: "Δημιουργεί HTML", D: "Εκτελεί JavaScript" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "15. Ποια είναι η λειτουργία του Aspect-Oriented Programming;",
+            options: { A: "Εκτελεί SQL", B: "Χειρίζεται cross-cutting concerns", C: "Δημιουργεί CSS", D: "Εκτελεί JavaScript" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "20. Ποια είναι η βασική μονάδα του blockchain;",
+            options: { A: "Cookie", B: "Block", C: "Table", D: "Node" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "21. Ποια είναι η λειτουργία του nonce στο blockchain;",
+            options: { A: "Δημιουργεί cookies", B: "Ελέγχει την ταυτότητα χρήστη", C: "Χρησιμοποιείται στο Proof of Work", D: "Δημιουργεί HTML" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "22. Ποιο από τα παρακάτω είναι consensus algorithm;",
+            options: { A: "SHA-256", B: "Proof of Work", C: "RSA", D: "SQL" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "23. Ποια γλώσσα χρησιμοποιείται για smart contracts στο Ethereum;",
+            options: { A: "Java", B: "Solidity", C: "Python", D: "TypeScript" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "24. Ποιο από τα παρακάτω είναι χαρακτηριστικό του Spring Boot;",
+            options: { A: "Χρήση JSP", B: "Ενσωματωμένος server", C: "Χρήση Angular", D: "Χρήση SQL" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "25. Ποιο από τα παρακάτω είναι χαρακτηριστικό του ORM;",
+            options: { A: "Δημιουργεί HTML", B: "Χαρτογραφεί αντικείμενα σε πίνακες", C: "Εκτελεί JavaScript", D: "Δημιουργεί CSS" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "26. Ποιο από τα παρακάτω είναι χαρακτηριστικό του jQuery;",
+            options: { A: "Χρήση TypeScript", B: "DOM Traversal", C: "Χρήση Angular", D: "Χρήση SQL" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "27. Ποιο από τα παρακάτω είναι χαρακτηριστικό του Angular;",
+            options: { A: "Χρήση PHP", B: "Χρήση Components", C: "Χρήση JSP", D: "Χρήση JDBC" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "28. Ποιο από τα παρακάτω είναι χαρακτηριστικό του Vanilla JS;",
+            options: { A: "Χρήση framework", B: "Lightweight", C: "Χρήση Angular", D: "Χρήση SQL" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "29. Ποιο από τα παρακάτω είναι χαρακτηριστικό του Hibernate;",
+            options: { A: "Εκτελεί JavaScript", B: "Υλοποιεί JPA", C: "Δημιουργεί HTML", D: "Εκτελεί SQL" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 11",
+            q: "30. Ποιο από τα παρακάτω είναι χαρακτηριστικό του Spring;",
+            options: { A: "Χρήση JSP", B: "Dependency Injection", C: "Χρήση Angular", D: "Χρήση SQL" },
+            correct: "B"
+        },
+
+        // ΚΕΦΑΛΑΙΟ 12
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "1. Ποιο είναι το προεπιλεγμένο URL του Apache Tomcat;",
+            options: { A: "http://localhost:80", B: "http://localhost:443", C: "http://localhost:8080", D: "http://127.0.0.1:3000" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "2. Ποιο αρχείο περιέχει τις ρυθμίσεις χρηστών του Tomcat;",
+            options: { A: "web.xml", B: "tomcat-users.xml", C: "server.xml", D: "startup.bat" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "3. Ποιο αρχείο περιέχει τις ρυθμίσεις του server στο Tomcat;",
+            options: { A: "web.xml", B: "tomcat-users.xml", C: "server.xml", D: "index.html" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "4. Ποιο είναι το περιεχόμενο ενός WAR αρχείου;",
+            options: { A: "Μόνο HTML", B: "Μόνο Java", C: "Όλα τα αρχεία μιας Web εφαρμογής", D: "Μόνο CSS" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "5. Ποια είναι η λειτουργία του JDBC API;",
+            options: { A: "Δημιουργεί HTML", B: "Εκτελεί JavaScript", C: "Επιτρέπει σύνδεση Java με DB", D: "Δημιουργεί CSS" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "6. Ποιο interface χρησιμοποιείται για να στείλουμε HTTP απάντηση σε Servlet;",
+            options: { A: "HttpServletRequest", B: "HttpServletResponse", C: "ServletOutputStream", D: "HttpSession" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "7. Ποιο στοιχείο JSP περιέχει Java κώδικα;",
+            options: { A: "<%@ ... %>", B: "<%! ... %>", C: "<% ... %>", D: "&lt;script&gt; ... &lt;/script&gt;" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "8. Ποια μέθοδος μετακινεί τον cursor στο επόμενο row του ResultSet;",
+            options: { A: "next()", B: "move()", C: "advance()", D: "step()" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "9. Πού αποθηκεύονται τα sessions;",
+            options: { A: "Στον client", B: "Στον server", C: "Στο HTML", D: "Στο CSS" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "10. Ποια είναι η διαφορά μεταξύ redirection και forwarding;",
+            options: { A: "Το redirection αλλάζει το URL", B: "Το forwarding αλλάζει το URL", C: "Το redirection γίνεται στον server", D: "Δεν υπάρχει διαφορά" },
+            correct: "A"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "11. Ποιο από τα παρακάτω χρησιμοποιεί XML;",
+            options: { A: "REST", B: "SOAP", C: "JSON", D: "JavaScript" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "12. Ποιο από τα παρακάτω χρησιμοποιεί JSON;",
+            options: { A: "SOAP", B: "REST", C: "JSP", D: "JDBC" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "13. Ποιο είναι το MIME type για JSON;",
+            options: { A: "text/json", B: "application/json", C: "text/javascript", D: "application/xml" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "14. Ποιο είναι το MIME type για XML;",
+            options: { A: "application/json", B: "text/html", C: "application/xml", D: "text/xml" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "15. Ποιο HTTP verb αντιστοιχεί σε CRUD 'Update'?",
+            options: { A: "GET", B: "POST", C: "PUT", D: "DELETE" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "16. Τι επιστρέφει η fetch() συνάρτηση;",
+            options: { A: "String", B: "Object", C: "Promise", D: "Boolean" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "17. Ποια μέθοδος χρησιμοποιείται για να μετατρέψουμε την απάντηση σε JSON;",
+            options: { A: "toJSON()", B: "parse()", C: "json()", D: "convert()" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "18. Ποιο εργαλείο χρησιμοποιείται για REST API testing;",
+            options: { A: "Eclipse", B: "XAMPP", C: "Postman", D: "VS Code" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "19. Ποιο εργαλείο περιλαμβάνει MariaDB και Apache Server;",
+            options: { A: "Tomcat", B: "Eclipse", C: "XAMPP", D: "NetBeans" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "20. Ποιο IDE χρησιμοποιείται για Java Web Projects;",
+            options: { A: "VS Code", B: "Eclipse", C: "Notepad++", D: "IntelliJ" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "21. Ποια είναι η λειτουργία του XML Schema;",
+            options: { A: "Εκτελεί JavaScript", B: "Περιγράφει τη δομή XML", C: "Δημιουργεί HTML", D: "Εκτελεί SQL" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "22. Ποια είναι η λειτουργία του JSON Schema;",
+            options: { A: "Εκτελεί JavaScript", B: "Περιγράφει τη δομή JSON", C: "Δημιουργεί HTML", D: "Εκτελεί SQL" },
+            correct: "B"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "23. Ποια είναι η βασική λειτουργία του Servlet API;",
+            options: { A: "Δημιουργεί HTML", B: "Εκτελεί SQL", C: "Διαχειρίζεται HTTP αιτήματα", D: "Εκτελεί JavaScript" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "24. Ποιο εργαλείο χρησιμοποιείται για να ξεκινήσει ο Tomcat server;",
+            options: { A: "run.bat", B: "start.bat", C: "startup.bat", D: "launch.bat" },
+            correct: "C"
+        },
+        {
+            chapter: "Κεφάλαιο 12",
+            q: "25. Ποιο αρχείο πρέπει να βρίσκεται στον φάκελο webapp;",
+            options: { A: "index.html", B: "main.java", C: "web.xml", D: "style.css" },
+            correct: "A"
+        }
+    ];
+
+    let currentQuestions = []; // Αποθηκεύει τις ερωτήσεις που εμφανίζονται τώρα
+    let isExamMode = false;     // True αν είμαστε σε λειτουργία τυχαίων 40 ερωτήσεων
+
+    function escapeHTML(str) {
+        return str.replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(/"/g, "&quot;")
+                  .replace(/'/g, "&#039;");
+    }
+
+    // Ανακάτεμα πίνακα (Fisher-Yates)
+    function shuffleArray(array) {
+        let arr = [...array];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // 1. Λειτουργία Έναρξης Εξέτασης (40 τυχαίες ερωτήσεις)
+    function startExamMode() {
+        isExamMode = true;
+        document.getElementById("chapterFilter").value = "all";
+        document.getElementById("scoreBox").style.display = "none";
+        document.getElementById("mistakesContainer").style.display = "none";
+
+        // Ανακατεύουμε όλες τις ερωτήσεις και παίρνουμε τις πρώτες 40
+        let shuffled = shuffleArray(quizData);
+        currentQuestions = shuffled.slice(0, 40);
+
+        renderQuestions();
+    }
+
+    // Φόρτωση κανονικού Quiz με βάση το Φίλτρο Κεφαλαίου
+    function loadQuiz() {
+        isExamMode = false;
+        const filterValue = document.getElementById("chapterFilter").value;
+        document.getElementById("scoreBox").style.display = "none";
+        document.getElementById("mistakesContainer").style.display = "none";
+
+        if (filterValue === "all") {
+            currentQuestions = [...quizData];
+        } else {
+            currentQuestions = quizData.filter(item => item.chapter === filterValue);
+        }
+
+        renderQuestions();
+    }
+
+    // Σχεδίαση των ερωτήσεων στην οθόνη
+    function renderQuestions() {
+        const quizContainer = document.getElementById("quiz");
+        quizContainer.innerHTML = "";
+
+        currentQuestions.forEach((item, index) => {
+            const card = document.createElement("div");
+            card.className = "question-card";
+            card.setAttribute("id", `card-${index}`);
+            card.setAttribute("data-correct", item.correct);
+
+            card.innerHTML = `
+                <span class="chapter-tag">${escapeHTML(item.chapter)}</span>
+                <div class="question-title">${escapeHTML(item.q)}</div>
+                <div class="options-list">
+                    ${Object.entries(item.options).map(([key, value]) => `
+                        <label class="option-label" data-key="${key}" onclick="handleOptionClick(${index}, '${key}')">
+                            <input type="radio" name="question-${index}" value="${key}" style="display:none;">
+                            <strong>${key}.</strong> &nbsp; ${escapeHTML(value)}
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            quizContainer.appendChild(card);
+        });
+    }
+
+    // Διαχείριση κλικ (Άμεσος χρωματισμός ανά ερώτηση)
+    function handleOptionClick(qIndex, selectedKey) {
+        const card = document.getElementById(`card-${qIndex}`);
+        
+        // Αν έχει ήδη απαντηθεί η συγκεκριμένη ερώτηση, την κλειδώνουμε
+        if (card.classList.contains("answered")) return;
+        card.classList.add("answered");
+
+        const correctKey = card.getAttribute("data-correct");
+        const labels = card.querySelectorAll(".option-label");
+
+        labels.forEach(label => {
+            const labelKey = label.getAttribute("data-key");
+            label.classList.add("disabled"); // Απενεργοποίηση για να μην αλλάξει η απάντηση
+
+            if (labelKey === correctKey) {
+                label.classList.add("correct"); // Πάντα πρασινίζει η σωστή
+            }
+            if (labelKey === selectedKey && selectedKey !== correctKey) {
+                label.classList.add("incorrect"); // Κοκκινίζει η επιλογή του χρήστη αν είναι λάθος
+            }
+        });
+
+        // Αποθήκευση της επιλογής στο αντικείμενο της ερώτησης
+        currentQuestions[qIndex].userChoice = selectedKey;
+    }
+
+    // Υποβολή και εμφάνιση αναφοράς λαθών
+    function finishQuiz() {
+        let score = 0;
+        let mistakesHTML = "";
+
+        currentQuestions.forEach((item, index) => {
+            const card = document.getElementById(`card-${index}`);
+            const userChoice = item.userChoice;
+
+            if (userChoice !== undefined) {
+                if (userChoice === item.correct) {
+                    score++;
+                } else {
+                    // Καταγραφή λάθους
+                    mistakesHTML += `
+                        <div class="mistake-item">
+                            <div class="chapter-tag" style="margin-bottom:5px;">${escapeHTML(item.chapter)}</div>
+                            <div class="mistake-q">${escapeHTML(item.q)}</div>
+                            <div class="mistake-details">
+                                <span style="color:var(--incorrect-color); font-weight:bold;">Η απάντησή σου:</span> ${userChoice}. ${escapeHTML(item.options[userChoice])} <br>
+                                <span style="color:var(--correct-color); font-weight:bold;">Το σωστό:</span> ${item.correct}. ${escapeHTML(item.options[item.correct])}
+                            </div>
+                        </div>
+                    `;
+                }
+            } else {
+                // Αν έμεινε αναπάντητο
+                mistakesHTML += `
+                    <div class="mistake-item" style="border-left-color: #64748b; background-color: #f1f5f9;">
+                        <div class="chapter-tag" style="margin-bottom:5px; background-color:#e2e8f0; color:#475569;">${escapeHTML(item.chapter)}</div>
+                        <div class="mistake-q">${escapeHTML(item.q)}</div>
+                        <div class="mistake-details">
+                            <span style="color:#64748b; font-weight:bold;">Δεν απαντήθηκε.</span> <br>
+                            <span style="color:var(--correct-color); font-weight:bold;">Το σωστό:</span> ${item.correct}. ${escapeHTML(item.options[item.correct])}
+                        </div>
+                    </div>
+                `;
+                // Αν δεν απαντήθηκε, δείχνουμε τη σωστή πάνω στην κάρτα
+                if (card) {
+                    const correctLabel = card.querySelector(`.option-label[data-key="${item.correct}"]`);
+                    if (correctLabel) correctLabel.classList.add("correct");
+                }
+            }
+        });
+
+        // Υπολογισμός τελικού σκορ
+        const total = currentQuestions.length;
+        const scoreBox = document.getElementById("scoreBox");
+        scoreBox.style.display = "block";
+
+        if (isExamMode) {
+            // Υπολογισμός με βάση τη φόρμουλα: Σωστά - (Λάθη * 0.25) αν υπάρχει αρνητική, 
+            // αλλά εδώ εφαρμόζουμε το καθαρό ποσοστό ή τη βαθμολογία της σχολής.
+            let wrongCount = total - score;
+            // Αν θέλετε να βάλετε την κλασική αρνητική βαθμολογία:
+            let finalGrade = score - (wrongCount * 0.25);
+            if (finalGrade < 0) finalGrade = 0;
+            
+            // Μετατροπή σε κλίμακα 0-5 (σύμφωνα με τη φόρμουλα της φωτογραφίας)
+            let formulaGrade = (score - (0.5 * wrongCount)) / 8;
+            if (formulaGrade < 0) formulaGrade = 0;
+
+            let passStatus = formulaGrade >= 2.5 ? 
+                `<div class="badge-result badge-pass">🟢 ΠΕΡΑΣΑΤΕ!</div>` : 
+                `<div class="badge-result badge-fail">🔴 ΑΠΕΤΥΧΑΤΕ (Κάτω από τη βάση του 2.5)</div>`;
+
+            scoreBox.innerHTML = `
+                <h2>Αποτελέσματα Εξέτασης</h2>
+                <p>Σωστές Απαντήσεις: <strong>${score}</strong> / ${total}</p>
+                <p>Λανθασμένες/Απαντήσεις: <strong>${wrongCount}</strong> / ${total}</p>
+                <p>Τελική βαθμολογία του καθηγητή: <strong>${formulaGrade.toFixed(2)} / 5.0</strong></p>
+                ${passStatus}
+            `;
+        } else {
+            scoreBox.innerHTML = `
+                <h2>Αποτελέσματα Μελέτης</h2>
+                <p>Σωστά: <strong>${score}</strong> / ${total} (${Math.round((score/total)*100)}%)</p>
+            `;
+        }
+
+        // Εμφάνιση Αναφοράς Λαθών
+        const mistakesContainer = document.getElementById("mistakesContainer");
+        const mistakesList = document.getElementById("mistakesList");
+        mistakesContainer.style.display = "block";
+        
+        if (mistakesHTML !== "") {
+            mistakesList.innerHTML = mistakesHTML;
+        } else {
+            mistakesList.innerHTML = "<p style='color:var(--correct-color); font-weight:bold;'>💡 Εξαιρετικά! Κανένα λάθος!</p>";
+        }
+
+        scoreBox.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetQuiz() {
+        userAnswers = {};
+        if (isExamMode) {
+            startExamMode();
+        } else {
+            loadQuiz();
+        }
+    }
+
+    function changeChapter() {
+        loadQuiz();
+    }
+
+    window.onload = loadQuiz;
+</script>
+
+</body>
+</html>

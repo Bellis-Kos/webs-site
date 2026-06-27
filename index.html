@@ -298,19 +298,34 @@
 </div>
 
 <script>
-            function filterBySearch() {
+                function filterBySearch() {
         const searchText = document.getElementById("quizSearch").value.toLowerCase();
         const cards = document.querySelectorAll(".question-card");
 
         cards.forEach(card => {
-            // Παίρνουμε μόνο το κείμενο της εκφώνησης (τίτλος ερώτησης)
             const questionTitle = card.querySelector(".question-title").textContent.toLowerCase();
+            const correctKey = card.getAttribute("data-correct");
             
-            // Ψάχνουμε τη λέξη-κλειδί ΑΠΟΚΛΕΙΣΤΙΚΑ στην εκφώνηση
             if (questionTitle.includes(searchText)) {
                 card.style.display = "block";
+                
+                // Αν ο χρήστης έχει γράψει κάτι στο search, δείξε αμέσως τη σωστή απάντηση
+                if (searchText !== "") {
+                    const correctLabel = card.querySelector(`.option-label[data-key="${correctKey}"]`);
+                    if (correctLabel) {
+                        correctLabel.classList.add("correct");
+                    }
+                }
             } else {
                 card.style.display = "none";
+            }
+            
+            // Αν σβήσεις τελείως την αναζήτηση, επανέφερε τις ερωτήσεις που δεν έχουν απαντηθεί ακόμα
+            if (searchText === "" && !card.classList.contains("answered")) {
+                const correctLabel = card.querySelector(`.option-label[data-key="${correctKey}"]`);
+                if (correctLabel) {
+                    correctLabel.classList.remove("correct");
+                }
             }
         });
     }
